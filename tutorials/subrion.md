@@ -1,0 +1,154 @@
+[TOC]
+
+# Introduction
+
+In this tutorial, we will use Bitnami containers to run the <a href="http://www.subrion.org/" target="_blank">Subrion Open Source CMS</a>, taking advantage of Docker features such as linking and volumes.
+
+### [MariaDB](https://github.com/bitnami/bitnami-docker-mariadb)
+
+MariaDB will be used as the database server of choice and will be used by Subrion to store its database schema.
+
+### [PHP-FPM](https://github.com/bitnami/bitnami-docker-php-fpm)
+
+Subrion is a php application so we will use the PHP-FPM container to provide php support in the application stack.
+
+### [Apache](https://github.com/bitnami/bitnami-docker-apache)
+
+The Apache web server will be used to serve the Subrion application, with the php processing tasks delegated to the PHP-FPM container.
+
+# Setting up Subrion
+
+### Step 1: Download Subrion
+
+Create an new project directory that will contain our app's content.
+
+```bash
+mkdir docker-subrion
+cd docker-subrion
+```
+
+The latest version of Subrion can be downloaded from <a href="http://www.subrion.org/download/" target="_blank">http://www.subrion.org/download/</a>.
+
+Download and save the archive in your project directory using your browser, or command line.
+
+```bash
+curl -LO http://tools.subrion.org/get/latest.zip
+```
+
+Next, unzip the archive into a subfolder named `subrion` in your project directory.
+
+```bash
+unzip latest.zip -d subrion
+```
+
+We need to provide write access to a few directories to ensure that all installation checks pass successfully.
+
+```bash
+chmod 1777 subrion/tmp
+chmod 755 subrion/{uploads,includes,backup,plugins}
+```
+
+### Step 2: Create a VirtualHost
+
+Create a folder name `apache-vhost` in your project directory.
+
+```bash
+mkdir apache-vhost
+```
+
+Create a file named `subrion.conf` in the `apache-vhost` directory with the following contents.
+
+```apache
+<VirtualHost *:80>
+  ServerName subrion.example.com
+  DocumentRoot "/app"
+  ProxyPassMatch ^/(.*\.php(/.*)?)$ fcgi://php-fpm:9000/app/$1
+  <Directory "/app">
+    Options Indexes FollowSymLinks
+    AllowOverride All
+    Require all granted
+  </Directory>
+</VirtualHost>
+```
+
+In this configuration, the `ProxyPassMatch` parameter ensures that all php script parsing tasks are delegated to the PHP-FPM container using the FastCGI interface. The `ServerName` parameter specifies the hostname for our Subrion application.
+
+Notice that the hostname we've used for connecting to PHP-FPM is `php-fpm`, we will use this as the alias when linking the PHP-FPM container to the apache container in the docker compose definition.
+
+# Using Docker Compose
+
+The easiest way to get up and running is using
+<a href="https://docs.docker.com/compose/" target="_blank">Docker Compose</a>. It uses one YAML file
+to define the different containers your application will use, the way they are configured as well
+as the links between different containers.
+
+### Step 1: Install Docker Compose
+
+Follow this guide for installing Docker Compose.
+
+- <a href="https://docs.docker.com/compose/install/" target="_blank">https://docs.docker.com/compose/install/</a>
+
+### Step 2: Copy Docker Compose definition
+
+Copy the definition below and save it as `docker-compose.yml` in your project directory.
+
+The following `docker-compose.yml` file will be used to orchestrate the launch of the MariaDB, PHP-FPM and Apache containers using docker-compose.
+
+```yaml
+mariadb:
+  image: bitnami/mariadb
+  environment:
+    - MARIADB_USER=subrion
+    - MARIADB_PASSWORD=my-password
+    - MARIADB_DATABASE=subriondb
+  volumes:
+    - mariadb-data:/bitnami/mariadb/data
+
+subrion:
+  image: bitnami/php-fpm
+  links:
+    - mariadb:mariadb
+  volumes:
+    - subrion:/app
+
+apache:
+  image: bitnami/apache
+  ports:
+    - 80:80
+  links:
+    - subrion:php-fpm
+  volumes:
+    - apache-vhost:/bitnami/apache/conf/vhosts
+    - subrion:/app
+```
+
+In the docker compose definition we specified the `MARIADB_USER`, `MARIADB_PASSWORD` and `MARIADB_DATABASE` parameters in the environment of the MariaDB container. The MariaDB container uses these parameters to setup a user and database on the first run. The same credentials should be used to complete the database connection setup in Subrion. The volume mounted at the `/bitnami/mariadb/data` path of the container ensures persistence of the MariaDB data.
+
+We use the `volumes` property to mount the Subrion application source in the PHP-FPM container at the `/app` path of the container. The link to the MariaDB container allows the PHP-FPM container to access the database server using the `mariadb` hostname.
+
+With the help of docker links, the Apache container will be able to address the PHP-FPM container using the `php-fpm` hostname. The `subrion:/app` volume in the Apache container ensures that the Subrion application source is accessible to the Apache daemon allowing it to be able to serve Subrion's static assets.
+
+Finally, we expose the Apache container port 80 on the host port 80, making the Subrion application accessible over the network.
+
+### Step 3: Running Docker Compose
+
+It's really easy to start a Docker Compose app.
+
+```bash
+docker-compose up
+```
+
+Docker Compose will show log output from all the containers in your application.
+
+### Step 4: Finishing the setup
+
+To access the `ServerName` we set up in our VirtualHost configuration, you may need to create an entry in your `/etc/hosts` file to point `subrion.example.com` to `localhost`.
+
+```bash
+echo '127.0.0.1 subrion.example.com' | sudo tee -a /etc/hosts
+```
+
+Navigate to <a href="http://subrion.example.com/install" target="_blank">http://subrion.example.com/install</a> in your browser to complete the installation of Subrion.
+
+In the database connection settings set the hostname to `mariadb`, username to `subrion`, password to `my-password`, database name to `subriondb` and complete the installation.
+
