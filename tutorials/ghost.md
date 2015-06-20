@@ -1,5 +1,3 @@
-[TOC]
-
 # Introduction
 
 In this tutorial, we will use Bitnami containers to run the
