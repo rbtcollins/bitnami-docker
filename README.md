@@ -1,4 +1,4 @@
-# bitnami-docker
+# Bitnami Docker Repository
 To learn more about Bitnami-provided Docker containers, please visit http://bitnami.com/docker.
 
 To see examples of how to link multiple containers together to provision a multi-tier application, please see the tutorials section in this repo.
