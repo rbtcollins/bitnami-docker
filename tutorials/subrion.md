@@ -152,15 +152,15 @@ In the database connection settings set the hostname to `mariadb`, username to `
 
 # Backing up Subrion
 
-The Subrion installation and its current state can easily be backed up by backing up the contents of the `docker-subrion` project directory by following these simple instructions
+The Subrion installation and its current state can easily be backed up by backing up the contents of the `docker-subrion` project directory. Follow these simple instructions to generate a backup.
 
-First stop the running instance of the Subrion application stack to ensure that the application is not updated while we are generating a backup.
+First stop any running instances of the Subrion application stack to ensure that the application is not updated while the backup is being generated.
 
 ```bash
 docker-compose stop
 ```
 
-Now we can generate a backup of the `docker-subrion` directory using the command to generate a timestamped bzipped tarball of the `docker-subrion` project directory.
+We can now generate a timestamped bzipped tarball of the `docker-subrion` directory using the following commands.
 
 ```bash
 pushd .
@@ -168,7 +168,7 @@ cd ../
 sudo tar -jcpf docker-subrion-$(date +%s).tar.bz2 docker-subrion
 ```
 
-Now that we have successfully backed up our Subrion installation, we can start it up again.
+Now that we have successfully backed up our Subrion installation, we can start up Subrion again.
 
 ```bash
 popd
@@ -177,9 +177,9 @@ docker-compose start
 
 # Restoring a Backup
 
-The Subrion application backup can easily be restored by simply extracting the contents of the tarball containing the backup and starting the application stack using `docker-compose` from inside the extracted parent directory.
+The Subrion application backup can easily be restored by simply extracting the contents of the tarball containing the backup and starting the application stack using `docker-compose` from inside the extracted `docker-subrion` directory.
 
-Before restoring a backup we need to stop and remove any existing containers to make sure new containers are started after the restore.
+Before restoring a backup we need to stop and remove any existing containers to make sure new containers are created when we start up Subrion again.
 
 ```bash
 docker-compose stop
@@ -188,12 +188,17 @@ docker-compose rm -v
 
 Now we can go ahead and extract the contents of the backup tarball.
 
-> The extraction process will create the `docker-subrion` directory, so please do not extract the tarball at the same location as any existing `docker-subrion` directory.
+> **NOTE:** Upon extraction the `docker-subrion` directory will be created, so please ensure that this directory does not already exist at the location of extraction.
 
 ```bash
 sudo tar -xf docker-subrion-<BACKUP_TIMESTAMP>.tar.bz2 --same-owner
-cd docker-subrion/
-docker-compose up
 ```
 
 *Replace `BACKUP_TIMESTAMP` in the above command with the timestamp of the backup you wish to restore*
+
+Now its time to start up Subrion
+
+```bash
+cd docker-subrion/
+docker-compose up
+```
