@@ -1,5 +1,3 @@
-[TOC]
-
 # Introduction
 
 In this tutorial, we will use Bitnami containers to run the <a href="http://www.subrion.org/" target="_blank">Subrion Open Source CMS</a>, taking advantage of Docker features such as linking and volumes.
@@ -20,7 +18,7 @@ The Apache web server will be used to serve the Subrion application, with the ph
 
 ### Step 1: Download Subrion
 
-Create an new project directory that will contain our app's content.
+Create a new project directory that will contain our app's content.
 
 ```bash
 mkdir docker-subrion
