@@ -150,3 +150,50 @@ Navigate to <a href="http://subrion.example.com/install" target="_blank">http://
 
 In the database connection settings set the hostname to `mariadb`, username to `subrion`, password to `my-password`, database name to `subriondb` and complete the installation.
 
+# Backing up Subrion
+
+The Subrion installation and its current state can easily be backed up by backing up the contents of the `docker-subrion` project directory by following these simple instructions
+
+First stop the running instance of the Subrion application stack to ensure that the application is not updated while we are generating a backup.
+
+```bash
+docker-compose stop
+```
+
+Now we can generate a backup of the `docker-subrion` directory using the command to generate a timestamped bzipped tarball of the `docker-subrion` project directory.
+
+```bash
+pushd .
+cd ../
+sudo tar -jcpf docker-subrion-$(date +%s).tar.bz2 docker-subrion
+```
+
+Now that we have successfully backed up our Subrion installation, we can start it up again.
+
+```bash
+popd
+docker-compose start
+```
+
+# Restoring a Backup
+
+The Subrion application backup can easily be restored by simply extracting the contents of the tarball containing the backup and starting the application stack using `docker-compose` from inside the extracted parent directory.
+
+Before restoring a backup we need to stop and remove any existing containers to make sure new containers are started after the restore.
+
+```bash
+docker-compose stop
+docker-compose rm -v
+```
+
+Now we can go ahead and extract the contents of the backup tarball.
+
+> The extraction process will create the `docker-subrion` directory, so please do not extract the tarball at the same location as any existing `docker-subrion` directory.
+
+```bash
+sudo tar -xf docker-subrion-<BACKUP_TIMESTAMP>.tar.bz2 --same-owner
+cd docker-subrion/
+docker-compose up
+```
+
+*Replace `BACKUP_TIMESTAMP` in the above command with the timestamp of the backup you wish to restore*
