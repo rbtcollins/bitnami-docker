@@ -120,7 +120,11 @@ redmine:
     - mariadb:mariadb
   volumes:
     - redmine:/app
-  command: "sh -c 'bundle install --without development test && bundle exec rake db:migrate RAILS_ENV=production && bundle exec rake generate_secret_token RAILS_ENV=production && bundle exec rails server -b 0.0.0.0 -p 3000 -e production'"
+  command: >
+    sh -c 'bundle install --without development test \
+        && bundle exec rake db:migrate RAILS_ENV=production \
+        && bundle exec rake generate_secret_token RAILS_ENV=production \
+        && bundle exec rails server -b 0.0.0.0 -p 3000 -e production'
 
 nginx:
   image: bitnami/nginx
