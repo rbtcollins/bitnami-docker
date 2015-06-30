@@ -8,11 +8,11 @@ MariaDB will be used as the database server of choice and will be used by Redmin
 
 ### [Ruby](https://github.com/bitnami/bitnami-docker-ruby)
 
-Redmine is a ruby on rails application so we will use the Ruby container to provide ruby support in the application stack.
+Redmine is a Ruby on Rails application so we will use the Ruby container to provide Ruby support in the application stack.
 
-### [Nginx](https://github.com/bitnami/bitnami-docker-nginx)
+### [nginx](https://github.com/bitnami/bitnami-docker-nginx)
 
-We will serve our Redmine app through an nginx server which we will make accessible to the host machine. Nginx will act as a reverse proxy to our Ruby container that will run the Redmine server.
+We will serve our Redmine app through an nginx server which we will make accessible to the host machine. nginx will act as a reverse proxy to our Ruby container that will run the Redmine server.
 
 # Setting up Redmine
 
@@ -58,9 +58,9 @@ production:
 
 Notice that the hostname we have used for our database connection is `mariadb`. We will use this as the alias when setting up the link between the MariaDB and the Ruby containers.
 
-We have also specified a user and database for redmine. We will specify environment variables to the MariaDB container to create these in the docker compose specification.
+We have also specified a user and database for Redmine. We will specify environment variables to the MariaDB container to create these in the docker compose specification.
 
-### Step 3: Create a Nginx Virtual Host
+### Step 3: Create an nginx Virtual Host
 
 Create a folder name `nginx-vhost` in your project directory.
 
@@ -86,7 +86,7 @@ server {
 }
 ```
 
-In this configuration, the `proxy_pass` parameter ensures that all ruby script parsing tasks are delegated to the Ruby container. The `server_name` parameter specifies the hostname for our Redmine application.
+In this configuration, the `proxy_pass` parameter ensures that all Ruby script parsing tasks are delegated to the Ruby container. The `server_name` parameter specifies the hostname for our Redmine application.
 
 Notice that the hostname we've used for connecting to Ruby is `redmine`, we will use this as the alias when linking the Ruby container to the nginx container in the docker compose definition.
 
@@ -136,15 +136,15 @@ nginx:
     - nginx-vhost:/bitnami/nginx/conf/vhosts
 ```
 
-The `docker-compose.yml` file will be used to orchestrate the launch of the MariaDB, Ruby and Nginx containers using docker-compose.
+The `docker-compose.yml` file will be used to orchestrate the launch of the MariaDB, Ruby and nginx containers using docker-compose.
 
 In the docker compose definition we specified the `MARIADB_USER`, `MARIADB_PASSWORD` and `MARIADB_DATABASE` parameters in the environment of the MariaDB container. The MariaDB container uses these parameters to setup a user and database on the first run. We have setup these variables according to the `database.yml` configuration above. The volume mounted at the `/bitnami/mariadb/data` path of the container ensures persistence of the MariaDB data.
 
 We use the `volumes` property to mount the Redmine application source in the Ruby container at the `/app` path of the container. The link to the MariaDB container allows the Ruby container to access the database server using the `mariadb` hostname.
 
-With the help of docker links, the Nginx container will be able to address the Ruby container using the `redmine` hostname.
+With the help of docker links, the nginx container will be able to address the Ruby container using the `redmine` hostname.
 
-Finally, we expose the Nginx container port 80 on the host port 80, making the Redmine application accessible over the network.
+Finally, we expose the nginx container port 80 on the host port 80, making the Redmine application accessible over the network.
 
 ### Step 3: Running Docker Compose
 
