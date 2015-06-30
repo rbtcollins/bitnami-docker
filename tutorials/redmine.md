@@ -100,11 +100,9 @@ Follow this guide for installing Docker Compose.
 
 - <a href="https://docs.docker.com/compose/install/" target="_blank">https://docs.docker.com/compose/install/</a>
 
-### Step 2: Copy Docker Compose definition
+### Step 2: Docker Compose Specification
 
-Copy the definition below and save it as `docker-compose.yml` in your project directory.
-
-The following `docker-compose.yml` file will be used to orchestrate the launch of the MariaDB, Ruby and Nginx containers using docker-compose.
+Create a file named `docker-compose.yml` in your project directory with the following contents:
 
 ```yaml
 mariadb:
@@ -133,6 +131,8 @@ nginx:
   volumes:
     - nginx-vhost:/bitnami/nginx/conf/vhosts
 ```
+
+The `docker-compose.yml` file will be used to orchestrate the launch of the MariaDB, Ruby and Nginx containers using docker-compose.
 
 In the docker compose definition we specified the `MARIADB_USER`, `MARIADB_PASSWORD` and `MARIADB_DATABASE` parameters in the environment of the MariaDB container. The MariaDB container uses these parameters to setup a user and database on the first run. We have setup these variables according to the `database.yml` configuration above. The volume mounted at the `/bitnami/mariadb/data` path of the container ensures persistence of the MariaDB data.
 
