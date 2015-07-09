@@ -279,6 +279,12 @@ spec:
           ports:
             - containerPort: 3000
               protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 30
+            timeoutSeconds: 1
 ```
 
 **You should change the image name to `gcr.io/<google-project-name>/redmine` as per the build instructions in [Step 2: Create a Docker container image](#step-2-create-a-docker-container-image). You should also change the password to the one specified in the `mariadb-controller.yml`**
