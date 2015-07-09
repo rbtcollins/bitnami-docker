@@ -15,6 +15,7 @@
 - [Allow external traffic](#allow-external-traffic)
 - [Access you Redmine server](#access-you-redmine-server)
 - [Scaling the Redmine application](#scaling-the-redmine-application)
+- [Take down and restart Redmine](#take-down-and-restart-redmine)
 - [Cleanup](#cleanup)
 
 This tutorial walks you through setting up [Redmine](http://redmine.org), backup by a MariaDB database and running on the Google Container Engine.
@@ -426,6 +427,32 @@ $ kubectl get pods -l name=redmine
 ```
 
 Once your site has fallen back into obscurity, you can ramp down the number of web server pods in the same manner.
+
+## Take down and restart Redmine
+
+Once you have Redmine up and running, try taking it down! Because you used persistent disks, your Redmine state is preserved even when the pods it's running on are deleted. Try it:
+
+```bash
+$ kubectl delete rc redmine
+$ kubectl delete rc mariadb
+```
+
+Deleting the replication controller, also deletes its pods.
+
+Confirm that the pods have been deleted:
+
+```bash
+$ kubectl get pods
+```
+
+Then re-create the pods:
+
+```bash
+$ kubectl create -f redmine-controller.yml
+$ kubectl create -f mariadb-controller.yml
+```
+
+Once the pods have restarted, the `redmine` and `mariadb` services pick them up immediately based on their labels, and your Redmine application is restored.
 
 ## Cleanup
 
