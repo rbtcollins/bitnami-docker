@@ -112,7 +112,7 @@ This script will automate the linking with the MariaDB service and setup the dat
 Build this image by running:
 
 ```bash
-$ sudo docker build -t gcr.io/<google-project-name>/redmine .
+$ docker build -t gcr.io/<google-project-name>/redmine .
 ```
 
 Then push this image to the Google Container Registry:
