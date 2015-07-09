@@ -39,7 +39,8 @@ Download and unpack the `redmine.zip` file into your working directory. The ZIP 
 
 ## Step 2: Create a Docker container image
 
-Lets begin by creating a `Dockerfile` which will describe the Redmine image. Docker container images can extend from other existing images so for this image, we'll extend from the existing `bitnami/ruby` image.
+Lets begin with the `Dockerfile` which will describe the Redmine image. Docker container images can extend from other existing images so for this image, we'll extend from the existing `bitnami/ruby` image. Take a look at its contents:
+
 
 ```dockerfile
 FROM bitnami/ruby:latest
@@ -61,9 +62,7 @@ WORKDIR /home/$BITNAMI_APP_USER/redmine/
 CMD ["/home/bitnami/redmine/run.sh"]
 ```
 
-Save this to a file named `Dockerfile`.
-
-Next, we will create the `run.sh` script referenced in the `Dockerfile`. This script will automate the linking with the MariaDB service and setup the database connection parameters accordingly. It will also perform the database migration tasks before starting up the Redmine application server.
+Next, lets take a look at the `run.sh` script referenced in the `Dockerfile`.
 
 ```bash
 #!/bin/bash
@@ -108,7 +107,7 @@ echo "Starting redmine server..."
 exec bundle exec rails server -b 0.0.0.0 -p 3000 -e production
 ```
 
-Save this to a file named `run.sh`.
+This script will automate the linking with the MariaDB service and setup the database connection parameters accordingly. It will also perform the database migration tasks before starting up the Redmine application server.
 
 Build this image by running:
 
