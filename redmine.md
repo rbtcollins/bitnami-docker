@@ -2,18 +2,18 @@
 # Redmine Tutorial
 
 - [Before you begin](#before-you-begin)
-- [Step 1: Download the configuration files](#step-1-download-the-configuration-files)
-- [Step 2: Create a Docker container image](#step-2-create-a-docker-container-image)
-- [Step 3: Create your cluster](#step-3-create-your-cluster)
-- [Step 4: Create MariaDB pod and service](#step-4-create-mariadb-pod-and-service)
+- [Download the configuration files](#download-the-configuration-files)
+- [Create a Docker container image](#create-a-docker-container-image)
+- [Create your cluster](#create-your-cluster)
+- [Create MariaDB pod and service](#create-mariadb-pod-and-service)
   + [MariaDB pod](#mariadb-pod)
   + [MariaDB service](#mariadb-service)
-- [Step 5: Create Redmine pod and service](#step-5-create-redmine-pod-and-service)
+- [Create Redmine pod and service](#create-redmine-pod-and-service)
   + [Redmine pod](#redmine-pod)
   + [Redmine service](#redmine-service)
-- [Step 6: Allow external traffic](#step-6-allow-external-traffic)
-- [Step 7: Access you Redmine server](#step-7-access-you-redmine-server)
-- [Step 8: Scaling the Redmine application](#step-8-scaling-the-redmine-application)
+- [Allow external traffic](#allow-external-traffic)
+- [Access you Redmine server](#access-you-redmine-server)
+- [Scaling the Redmine application](#scaling-the-redmine-application)
 - [Cleanup](#cleanup)
 
 This tutorial walks you through setting up [Redmine](http://redmine.org), backup by a MariaDB database and running on the Google Container Engine.
@@ -26,7 +26,7 @@ It also shows how you can set up a web service on an external IP, load balancing
 
 Follow the instructions on the [Before You Begin](https://cloud.google.com/container-engine/docs/before-you-begin) page to set up your Container Engine environment.
 
-## Step 1: Download the configuration files
+## Download the configuration files
 
 Download and unpack the `redmine.zip` file into your working directory. The ZIP file contains the configuration files used in this tutorial:
 
@@ -37,7 +37,7 @@ Download and unpack the `redmine.zip` file into your working directory. The ZIP 
   - mariadb-controller.yml
   - mariadb-service.yml
 
-## Step 2: Create a Docker container image
+## Create a Docker container image
 
 Lets begin with the `Dockerfile` which will describe the Redmine image. Docker container images can extend from other existing images so for this image, we'll extend from the existing `bitnami/ruby` image. Take a look at its contents:
 
@@ -121,7 +121,7 @@ Then push this image to the Google Container Registry:
 $ gcloud docker push gcr.io/<google-project-name>/redmine
 ```
 
-## Step 3: Create your cluster
+## Create your cluster
 
 Ok, now you are ready to create your Container Engine cluster on which you'll run Redmine. A cluster consists of a master API server hosted by Google and a set of worker nodes.
 
@@ -143,7 +143,7 @@ redmine  us-central1-b  0.19.3          23.251.159.83  n1-standard-1  RUNNING
 
 Now that your cluster is up and running, everything is set to launch the Redmine app.
 
-## Step 4: Create MariaDB pod and service
+## Create MariaDB pod and service
 
 ### MariaDB pod
 
@@ -240,7 +240,7 @@ NAME      LABELS         SELECTOR       IP(S)          PORT(S)
 mariadb   name=mariadb   name=mariadb   10.99.254.81   3306/TCP
 ```
 
-## Step 5: Create Redmine pod and service
+## Create Redmine pod and service
 
 Now that you have the backend for Redmine up and running, lets start the Redmine web servers.
 
@@ -287,7 +287,7 @@ spec:
             timeoutSeconds: 1
 ```
 
-**You should change the image name to `gcr.io/<google-project-name>/redmine` as per the build instructions in [Step 2: Create a Docker container image](#step-2-create-a-docker-container-image). You should also change the password to the one specified in the `mariadb-controller.yml`**
+**You should change the image name to `gcr.io/<google-project-name>/redmine` as per the build instructions in [Create a Docker container image](#create-a-docker-container-image). You should also change the password to the one specified in the `mariadb-controller.yml`**
 
 It specifies 3 replicas of the server. Using this file, you can start your Redmine servers with:
 
@@ -350,7 +350,7 @@ NAME      LABELS         SELECTOR       IP(S)           PORT(S)
 redmine   name=redmine   name=redmine   10.99.240.130   80/TCP
 ```
 
-## Step 6: Allow external traffic
+## Allow external traffic
 
 By default, the pod is only accessible by its internal IP within the cluster. In order to make the Redmine service accessible from outside you have to open the firewall for port 80.
 
@@ -371,7 +371,7 @@ gke-redmine-32bde88b-node-hru2   kubernetes.io/hostname=gke-redmine-32bde88b-nod
 
 You can alternatively open up port 80 from the [Developers Console](https://console.developers.google.com/).
 
-## Step 7: Access you Redmine server
+## Access you Redmine server
 
 Now that the firewall is open, you can access the service. Find the external IP of the service you just set up:
 
@@ -392,7 +392,7 @@ No events.
 
 Then, visit `http://x.x.x.x` where `x.x.x.x` is the IP address listed next to `LoadBalancer Ingress` in the response.
 
-## Step 8: Scaling the Redmine application
+## Scaling the Redmine application
 
 Suppose your Redmine app has been running for a while, and it gets a sudden burst of publicity. You decide it would be a good idea to add more web servers to your Redmine. You can do this easily, since your servers are defined as a service that uses a replication controller. Resize the number of pods in the replication controller as follows.
 
