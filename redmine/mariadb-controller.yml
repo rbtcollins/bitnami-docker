@@ -26,3 +26,11 @@ spec:
           ports:
             - containerPort: 3306
               name: mariadb
+          volumeMounts:
+            - name: mariadb-persistent-storage
+              mountPath: /bitnami/mariadb/data
+      volumes:
+        - name: mariadb-persistent-storage
+          gcePersistentDisk:
+            pdName: mariadb-disk
+            fsType: ext4
