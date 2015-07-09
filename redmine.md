@@ -255,7 +255,7 @@ $ kubectl create -f mariadb-service.yml
 See it running:
 
 ```bash
-$ kubectl get services -l name=mariadb
+$ kubectl get services mariadb
 NAME      LABELS         SELECTOR       IP(S)          PORT(S)
 mariadb   name=mariadb   name=mariadb   10.99.254.81   3306/TCP
 ```
@@ -365,7 +365,7 @@ $ kubectl create -f redmine-service.yml
 See it running:
 
 ```bash
-$ kubectl get services -l name=redmine
+$ kubectl get services redmine
 NAME      LABELS         SELECTOR       IP(S)           PORT(S)
 redmine   name=redmine   name=redmine   10.99.240.130   80/TCP
 ```
