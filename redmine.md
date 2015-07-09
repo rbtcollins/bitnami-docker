@@ -456,35 +456,36 @@ Once the pods have restarted, the `redmine` and `mariadb` services pick them up 
 
 ## Cleanup
 
-Delete the Redmine service to clean up its external load balancer.
+To delete your application completely:
 
-```bash
-$ kubectl delete services redmine
-```
+  1. Delete the firewall rule:
 
-When you're done with your cluster, you can shut it down:
+  ```bash
+  $ gcloud compute firewall-rules delete redmine
+  ```
 
-```bash
-$ gcloud beta container clusters delete redmine
-The following clusters will be deleted.
- - [redmine] in [us-central1-b]
+  2. Delete the services:
 
-Do you want to continue (Y/n)?
+  ```bash
+  $ kubectl delete service redmine
+  $ kubectl delete service mariadb
+  ```
 
-Deleting cluster redmine...done.
-Deleted [.../projects/bitnami-tutorials/zones/us-central1-b/clusters/redmine].
-```
+  3. Delete the controller:
 
-This deletes the Google Compute Engine instances that are running the cluster, and all services and pods that were running on them.
+  ```bash
+  $ kubectl delete rc redmine
+  $ kubectl delete rc mariadb
+  ```
 
-Remove the firewall rule that you created:
+  4. Delete your cluster:
 
-```bash
-$ gcloud compute firewall-rules delete redmine
-```
+  ```bash
+  $ gcloud beta container clusters delete redmine
+  ```
 
-Delete the disks
+  5. Delete the disks:
 
-```bash
-gcloud compute disks delete mariadb-disk
-```
+  ```bash
+  $ gcloud compute disks delete mariadb-disk
+  ```
