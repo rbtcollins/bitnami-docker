@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: redmine
+  labels:
+    name: redmine
+spec:
+  replicas: 3
+  selector:
+    name: redmine
+  template:
+    metadata:
+      labels:
+        name: redmine
+    spec:
+      containers:
+        - name: redmine
+          image: gcr.io/bitnami-tutorials/redmine
+          env:
+            - name: DATABASE_NAME
+              value: redmine_production
+            - name: DATABASE_USER
+              value: redmine
+            - name: DATABASE_PASSWORD
+              value: secretpassword
+            - name: REDMINE_SECRET_SESSION_TOKEN
+              value: MySecretSessionTokenProtectsMeFromBlackHats
+          ports:
+            - containerPort: 3000
+              protocol: TCP
