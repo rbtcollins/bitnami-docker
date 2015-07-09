@@ -136,12 +136,9 @@ A successful create response looks like:
 ```
 Creating cluster redmine...done.
 Created [.../projects/bitnami-tutorials/zones/us-central1-b/clusters/redmine].
-kubeconfig entry generated for redmine. To switch context to the cluster, run
-
-$ kubectl config use-context gke_bitnami-tutorials_us-central1-b_redmine
-
-NAME     ZONE           MASTER_VERSION  MASTER_IP       MACHINE_TYPE   STATUS
-redmine  us-central1-b  0.19.3          x.x.x.x         n1-standard-1  RUNNING
+kubeconfig entry generated for redmine.
+NAME     ZONE           MASTER_VERSION  MASTER_IP      MACHINE_TYPE   STATUS
+redmine  us-central1-b  0.19.3          23.251.159.83  n1-standard-1  RUNNING
 ```
 
 Now that your cluster is up and running, everything is set to launch the Redmine app.
@@ -199,9 +196,8 @@ Check to see if the pod is running. It may take a minute to change from `Pending
 
 ```bash
 $ kubectl get pods -l name=mariadb
-POD             IP          CONTAINER(S)   IMAGE(S)          HOST                                          LABELS         STATUS    CREATED          MESSAGE
-mariadb-9jstq   10.96.2.3                                    gke-redmine-df8458af-node-p8sk/10.240.14.99   name=mariadb   Running   4 minutes
-                            mariadb        bitnami/mariadb                                                                Running   About a minute
+NAME            READY     REASON    RESTARTS   AGE
+mariadb-gfc2z   1/1       Running   0          4m
 ```
 
 ### MariaDB service
@@ -240,8 +236,8 @@ See it running:
 
 ```bash
 $ kubectl get services -l name=mariadb
-NAME      LABELS         SELECTOR       IP(S)           PORT(S)
-mariadb   name=mariadb   name=mariadb   10.99.253.155   3306/TCP
+NAME      LABELS         SELECTOR       IP(S)          PORT(S)
+mariadb   name=mariadb   name=mariadb   10.99.254.81   3306/TCP
 ```
 
 ## Step 5: Create Redmine pod and service
@@ -297,13 +293,10 @@ Check to see if the pod is running. It may take a few minutes to change from `Pe
 
 ```bash
 $ kubectl get pods -l name=redmine
-POD             IP          CONTAINER(S)   IMAGE(S)                           HOST                                           LABELS         STATUS    CREATED      MESSAGE
-redmine-94ugb   10.96.2.4                                                     gke-redmine-df8458af-node-p8sk/10.240.14.99    name=redmine   Running   31 seconds
-                            redmine        gcr.io/bitnami-tutorials/redmine                                                                 Running   8 seconds
-redmine-fl4cj   10.96.0.5                                                     gke-redmine-df8458af-node-oz7n/10.240.14.234   name=redmine   Running   31 seconds
-                            redmine        gcr.io/bitnami-tutorials/redmine                                                                 Running   30 seconds
-redmine-sn50p   10.96.0.6                                                     gke-redmine-df8458af-node-oz7n/10.240.14.234   name=redmine   Running   31 seconds
-                            redmine        gcr.io/bitnami-tutorials/redmine                                                                 Running   30 seconds
+NAME            READY     REASON    RESTARTS   AGE
+redmine-77gyd   1/1       Running   0          35s
+redmine-fea4b   1/1       Running   0          35s
+redmine-mjlft   1/1       Running   0          35s
 ```
 
 Once the servers are up, you can list the pods in the cluster, to verify that they're all running:
@@ -347,8 +340,8 @@ See it running:
 
 ```bash
 $ kubectl get services -l name=redmine
-NAME      LABELS         SELECTOR       IP(S)            PORT(S)
-redmine   name=redmine   name=redmine   10.99.249.169    80/TCP
+NAME      LABELS         SELECTOR       IP(S)           PORT(S)
+redmine   name=redmine   name=redmine   10.99.240.130   80/TCP
 ```
 
 ## Step 6: Allow external traffic
@@ -365,9 +358,9 @@ The value of `--target-tag` is the node prefix for the cluster up to `-node`. Fi
 ```bash
 $ kubectl get nodes
 NAME                             LABELS                                                  STATUS
-gke-redmine-df8458af-node-3hn4   kubernetes.io/hostname=gke-redmine-df8458af-node-3hn4   Ready
-gke-redmine-df8458af-node-oz7n   kubernetes.io/hostname=gke-redmine-df8458af-node-oz7n   Ready
-gke-redmine-df8458af-node-p8sk   kubernetes.io/hostname=gke-redmine-df8458af-node-p8sk   Ready
+gke-redmine-32bde88b-node-0xnf   kubernetes.io/hostname=gke-redmine-32bde88b-node-0xnf   Ready
+gke-redmine-32bde88b-node-8uuw   kubernetes.io/hostname=gke-redmine-32bde88b-node-8uuw   Ready
+gke-redmine-32bde88b-node-hru2   kubernetes.io/hostname=gke-redmine-32bde88b-node-hru2   Ready
 ```
 
 You can alternatively open up port 80 from the [Developers Console](https://console.developers.google.com/).
