@@ -448,8 +448,8 @@ $ kubectl get pods
 Then re-create the pods:
 
 ```bash
-$ kubectl create -f redmine-controller.yml
 $ kubectl create -f mariadb-controller.yml
+$ kubectl create -f redmine-controller.yml
 ```
 
 Once the pods have restarted, the `redmine` and `mariadb` services pick them up immediately based on their labels, and your Redmine application is restored.
