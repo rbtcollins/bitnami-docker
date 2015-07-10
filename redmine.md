@@ -368,8 +368,9 @@ spec:
 
 > **Note**:
 > 1. Change the image name to `gcr.io/<google-project-name>/redmine` as per the build instructions in [Create a Docker container image](#create-a-docker-container-image).
-> 2. Change the `DATABASE_PASSWORD` env variable with the one specified in the `MARIADB_PASSWORD` env variable in `mariadb-controller.yml`
-> 3. Change the `GOOGLE_STORAGE_ACCESS_KEY_ID`, `GOOGLE_STORAGE_SECRET_ACCESS_KEY` and `GOOGLE_STORAGE_BUCKET` env variables the ones generated in [Create Google cloud storage bucket](#create-google-cloud-storage-bucket)
+> 2. Change the value of `DATABASE_PASSWORD` with the one specified for `MARIADB_PASSWORD` in `mariadb-controller.yml`
+> 3. Change the value of `REDMINE_SESSION_TOKEN` to a alphanumeric string of your choosing.
+> 4. Change the values of `GOOGLE_STORAGE_ACCESS_KEY_ID`, `GOOGLE_STORAGE_SECRET_ACCESS_KEY` and `GOOGLE_STORAGE_BUCKET` with the ones generated in [Create Google cloud storage bucket](#create-google-cloud-storage-bucket)
 
 It specifies 3 replicas of the server. Using this file, you can start your Redmine servers with:
 
@@ -501,7 +502,7 @@ $ kubectl delete rc redmine
 $ kubectl delete rc mariadb
 ```
 
-Deleting the replication controller also deletes its pods.
+*Deleting the replication controller also deletes its pods.*
 
 Confirm that the pods have been deleted:
 
