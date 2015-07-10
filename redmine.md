@@ -302,10 +302,15 @@ To create a bucket and developer key:
   2. Click the name of the project.
   3. In the left sidebar, go to **Storage > Cloud Storage > Browser**.
   4. Select **Create bucket** and give it the name `redmine-uploads`.
+
+  ![Create Bucket](images/create-bucket.png)
+
   5. In the left sidebar, go to **Storage > Cloud Storage > Storage settings**.
   6. Select **Interoperability**.
   7. If you have not set up interoperability before, click **Enable interoperability access**.
   8. Click **Create a new key**.
+
+  ![Create Developer Key](images/create-developer-key.png)
 
 Make a note of the generated **Access Key** and **Secret** as it will be used in our pod description in the next step.
 
