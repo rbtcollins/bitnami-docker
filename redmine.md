@@ -543,3 +543,5 @@ To delete your application completely:
   ```bash
   $ gcloud compute disks delete mariadb-disk
   ```
+
+  6. Delete the bucket and developer key from the [Google Developers Console](https://console.developers.google.com/)
