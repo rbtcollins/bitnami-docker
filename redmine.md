@@ -78,7 +78,7 @@ Next, lets take a look at the `run.sh` script referenced in the `Dockerfile`.
 #!/bin/bash
 set -e
 
-REDMINE_SESSION_TOKEN=${REDMINE_SESSION_TOKEN:-JXXnKhcTWTbRgChXFkWjC3zs3PrTq47qJPgWJRsnRXgHPJCs7VrwhpMVWdmh3rhM}
+REDMINE_SESSION_TOKEN=${REDMINE_SESSION_TOKEN:-rXvLWjqs4tqKNjdHgkqTLjqfj4wWkLCr}
 
 # automatically fetch database parameters from bitnami/mariadb
 DATABASE_HOST=${DATABASE_HOST:-${MARIADB_PORT_3306_TCP_ADDR}}
