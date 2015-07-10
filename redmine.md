@@ -49,12 +49,17 @@ FROM bitnami/ruby:latest
 ENV REDMINE_VERSION=3.0.3
 
 RUN curl -L http://www.redmine.org/releases/redmine-${REDMINE_VERSION}.tar.gz -o /tmp/redmine-${REDMINE_VERSION}.tar.gz \
+ && curl -L https://github.com/ka8725/redmine_s3/archive/master.tar.gz -o /tmp/redmine_s3.tar.gz \
+ && mkdir -p /home/$BITNAMI_APP_USER/redmine/ \
  && tar -xf /tmp/redmine-${REDMINE_VERSION}.tar.gz --strip=1 -C /home/$BITNAMI_APP_USER/redmine/ \
+ && mkdir -p /home/$BITNAMI_APP_USER/redmine/plugins/redmine_s3 \
+ && tar -xf /tmp/redmine_s3.tar.gz --strip=1 -C /home/$BITNAMI_APP_USER/redmine/plugins/redmine_s3 \
  && cd /home/$BITNAMI_APP_USER/redmine \
  && cp -a config/database.yml.example config/database.yml \
+ && cp -a plugins/redmine_s3/config/s3.yml.example config/s3.yml \
  && bundle install --without development test \
  && chown -R $BITNAMI_APP_USER:$BITNAMI_APP_USER /home/$BITNAMI_APP_USER/redmine/ \
- && rm -rf /tmp/redmine-${REDMINE_VERSION}.tar.gz
+ && rm -rf /tmp/redmine-${REDMINE_VERSION}.tar.gz /tmp/redmine_s3.tar.gz
 
 COPY run.sh /home/$BITNAMI_APP_USER/redmine/run.sh
 RUN sudo chmod 755 /home/$BITNAMI_APP_USER/redmine/run.sh
@@ -77,11 +82,25 @@ DATABASE_NAME=${DATABASE_NAME:-${MARIADB_ENV_MARIADB_DATABASE}}
 DATABASE_USER=${DATABASE_USER:-${MARIADB_ENV_MARIADB_USER}}
 DATABASE_PASSWORD=${DATABASE_PASSWORD:-${MARIADB_ENV_MARIADB_PASSWORD}}
 
+# google cloud storage configuration (uploads)
+GOOGLE_STORAGE_ACCESS_KEY_ID=${GOOGLE_STORAGE_ACCESS_KEY_ID:-}
+GOOGLE_STORAGE_SECRET_ACCESS_KEY=${GOOGLE_STORAGE_SECRET_ACCESS_KEY:-}
+GOOGLE_STORAGE_BUCKET=${GOOGLE_STORAGE_BUCKET:-}
+GOOGLE_STORAGE_ENDPOINT=${GOOGLE_STORAGE_ENDPOINT:-storage.googleapis.com}
+
 if [[ -z ${DATABASE_HOST} || -z ${DATABASE_NAME} || \
       -z ${DATABASE_USER} || -z ${DATABASE_PASSWORD} ]]; then
   echo "ERROR: "
   echo "  Please configure the database connection."
   echo "  Cannot continue without a database. Aborting..."
+  exit 1
+fi
+
+if [[ -z ${GOOGLE_STORAGE_ACCESS_KEY_ID} || -z ${GOOGLE_STORAGE_SECRET_ACCESS_KEY} ||
+      -z ${GOOGLE_STORAGE_BUCKET} || -z ${GOOGLE_STORAGE_ENDPOINT} ]]; then
+  echo "ERROR: "
+  echo "  Please configure a google cloud storage bucket."
+  echo "  Cannot continue. Aborting..."
   exit 1
 fi
 
@@ -94,6 +113,15 @@ production:
   username: ${DATABASE_USER}
   password: "${DATABASE_PASSWORD}"
   encoding: utf8
+EOF
+
+# configure cloud storage settings
+cat > config/s3.yml <<EOF
+production:
+  access_key_id: ${GOOGLE_STORAGE_ACCESS_KEY_ID}
+  secret_access_key: ${GOOGLE_STORAGE_SECRET_ACCESS_KEY}
+  bucket: ${GOOGLE_STORAGE_BUCKET}
+  endpoint: ${GOOGLE_STORAGE_ENDPOINT}
 EOF
 
 # create the secret session token file
@@ -263,6 +291,23 @@ mariadb   name=mariadb   name=mariadb   10.99.254.81   3306/TCP
 
 Now that you have the backend for Redmine up and running, lets start the Redmine web servers.
 
+### Create Google cloud storage bucket
+
+We will be using a Google cloud storage bucket for persistence of files uploaded to our Redmine application. We will also generate a developer key using which the Redmine application will be able to access bucket.
+
+To create a bucket and developer key:
+
+  1. Go to the [Google Developers Console](https://console.developers.google.com/).
+  2. Click the name of the project.
+  3. In the left sidebar, go to **Storage > Cloud Storage > Browser**.
+  4. Select **Create bucket** and give it the name `redmine-uploads`.
+  5. In the left sidebar, go to **Storage > Cloud Storage > Storage settings**.
+  6. Select **Interoperability**.
+  7. If you have not set up interoperability before, click **Enable interoperability access**.
+  8. Click **Create a new key**.
+
+Make a note of the generated **Access Key** and **Secret** as it will be used in our pod description in the next step.
+
 ### Redmine pod
 
 The controller and its pod template is described in the file `redmine-controller.yml`:
@@ -295,6 +340,12 @@ spec:
               value: secretpassword
             - name: REDMINE_SECRET_SESSION_TOKEN
               value: MySecretSessionTokenProtectsMeFromBlackHats
+            - name: GOOGLE_STORAGE_ACCESS_KEY_ID
+              value: GOOGUF56OWN3R3LFYOZE
+            - name: GOOGLE_STORAGE_SECRET_ACCESS_KEY
+              value: A+uW0XLz9Y+EHUGRUf1V2uApcI/TenhBtUnPao7i
+            - name: GOOGLE_STORAGE_BUCKET
+              value: redmine-uploads
           ports:
             - containerPort: 3000
               protocol: TCP
@@ -306,7 +357,10 @@ spec:
             timeoutSeconds: 1
 ```
 
-**You should change the image name to `gcr.io/<google-project-name>/redmine` as per the build instructions in [Create a Docker container image](#create-a-docker-container-image). You should also change the password to the one specified in the `mariadb-controller.yml`**
+> **Note**:
+> 1. Change the image name to `gcr.io/<google-project-name>/redmine` as per the build instructions in [Create a Docker container image](#create-a-docker-container-image).
+> 2. Change the database password with the one specified in the `mariadb-controller.yml`
+> 3. Change the bucket name and developer key with the one generated in [Create Google cloud storage bucket](#create-google-cloud-storage-bucket)
 
 It specifies 3 replicas of the server. Using this file, you can start your Redmine servers with:
 

@@ -25,6 +25,12 @@ spec:
               value: secretpassword
             - name: REDMINE_SECRET_SESSION_TOKEN
               value: MySecretSessionTokenProtectsMeFromBlackHats
+            - name: GOOGLE_STORAGE_ACCESS_KEY_ID
+              value: GOOGUF56OWN3R3LFYOZE
+            - name: GOOGLE_STORAGE_SECRET_ACCESS_KEY
+              value: A+uW0XLz9Y+EHUGRUf1V2uApcI/TenhBtUnPao7i
+            - name: GOOGLE_STORAGE_BUCKET
+              value: redmine-uploads
           ports:
             - containerPort: 3000
               protocol: TCP
