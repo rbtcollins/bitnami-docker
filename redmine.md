@@ -48,9 +48,8 @@ Lets begin with the `Dockerfile` which will describe the Redmine image. Docker c
 FROM bitnami/ruby:latest
 ENV REDMINE_VERSION=3.0.3
 
-RUN curl -LO http://www.redmine.org/releases/redmine-${REDMINE_VERSION}.tar.gz -o /tmp/redmine-${REDMINE_VERSION}.tar.gz \
- && mkdir -p /home/$BITNAMI_APP_USER/redmine/ \
- && tar -xf redmine-${REDMINE_VERSION}.tar.gz --strip=1 -C /home/$BITNAMI_APP_USER/redmine/ \
+RUN curl -L http://www.redmine.org/releases/redmine-${REDMINE_VERSION}.tar.gz -o /tmp/redmine-${REDMINE_VERSION}.tar.gz \
+ && tar -xf /tmp/redmine-${REDMINE_VERSION}.tar.gz --strip=1 -C /home/$BITNAMI_APP_USER/redmine/ \
  && cd /home/$BITNAMI_APP_USER/redmine \
  && cp -a config/database.yml.example config/database.yml \
  && bundle install --without development test \
