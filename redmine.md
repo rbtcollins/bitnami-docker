@@ -5,8 +5,8 @@
 - [Download the configuration files](#download-the-configuration-files)
 - [Create a Docker container image](#create-a-docker-container-image)
 - [Create your cluster](#create-your-cluster)
-- [Create your persistent disks](#create-your-persistent-disks)
 - [Create MariaDB pod and service](#create-mariadb-pod-and-service)
+  + [Create persistent disk](#create-persistent-disk)
   + [MariaDB pod](#mariadb-pod)
   + [MariaDB service](#mariadb-service)
 - [Create Redmine pod and service](#create-redmine-pod-and-service)
@@ -144,17 +144,17 @@ redmine  us-central1-b  0.19.3          23.251.159.83  n1-standard-1  RUNNING
 
 Now that your cluster is up and running, everything is set to launch the Redmine app.
 
-## Create your persistent disks
+## Create MariaDB pod and service
 
-This example makes use of [persistent disks](https://cloud.google.com/compute/docs/disks/), allowing the application to preserve its state across pod shutdown and startup.
+### Create persistent disk
 
-We will create one persistent disk for the MariaDB pod.
+In this example we will make use of [persistent disks](https://cloud.google.com/compute/docs/disks/), allowing the database server to preserve its state across pod shutdown and startup.
 
 ```bash
 $ gcloud compute disks create --size 200GB mariadb-disk
 ```
 
-## Create MariaDB pod and service
+This disk will be used in the MariaDB pod definition.
 
 ### MariaDB pod
 
