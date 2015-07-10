@@ -10,6 +10,7 @@
   + [MariaDB pod](#mariadb-pod)
   + [MariaDB service](#mariadb-service)
 - [Create Redmine pod and service](#create-redmine-pod-and-service)
+  + [Create Google cloud storage bucket](#create-google-cloud-storage-bucket)
   + [Redmine pod](#redmine-pod)
   + [Redmine service](#redmine-service)
 - [Allow external traffic](#allow-external-traffic)
