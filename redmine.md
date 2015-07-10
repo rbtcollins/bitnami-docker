@@ -21,9 +21,9 @@
 
 This tutorial walks you through setting up [Redmine](http://redmine.org), backup by a MariaDB database and running on the Google Container Engine.
 
-The tutorial uses the Redmine source code, turns it into a Docker container image and then runs that image on Google Container Engine.
+We create a Docker container image using the Redmine source code and also install the [Redmine S3](https://github.com/ka8725/redmine_s3) plugin to enable persistence of file uploads via [Google cloud storage](https://cloud.google.com/storage/).
 
-It also shows how you can set up a web service on an external IP, load balancing to a set of replicated servers backed by replicated Redmine nodes.
+The tutorial also demonstrates the setup of Redmine on an external IP, load balancing to a set of replicated servers backed by replicated Redmine nodes.
 
 ## Before you begin
 
@@ -42,15 +42,18 @@ Download and unpack the `redmine.zip` file into your working directory. The ZIP 
 
 ## Create a Docker container image
 
-Lets begin with the `Dockerfile` which will describe the Redmine image. Docker container images can extend from other existing images so for this image, we'll extend from the existing `bitnami/ruby` image. Take a look at its contents:
+The Redmine image is built using the `Dockerfile` and `run.sh` script. Docker container images can extend from other existing images so for this image, we'll extend from the existing `bitnami/ruby` image.
 
+Take a look the the `Dockerfile` contents:
 
 ```dockerfile
 FROM bitnami/ruby:latest
 ENV REDMINE_VERSION=3.0.3
 
-RUN curl -L http://www.redmine.org/releases/redmine-${REDMINE_VERSION}.tar.gz -o /tmp/redmine-${REDMINE_VERSION}.tar.gz \
- && curl -L https://github.com/ka8725/redmine_s3/archive/master.tar.gz -o /tmp/redmine_s3.tar.gz \
+RUN curl -L http://www.redmine.org/releases/redmine-${REDMINE_VERSION}.tar.gz \
+      -o /tmp/redmine-${REDMINE_VERSION}.tar.gz \
+ && curl -L https://github.com/ka8725/redmine_s3/archive/master.tar.gz \
+      -o /tmp/redmine_s3.tar.gz \
  && mkdir -p /home/$BITNAMI_APP_USER/redmine/ \
  && tar -xf /tmp/redmine-${REDMINE_VERSION}.tar.gz --strip=1 -C /home/$BITNAMI_APP_USER/redmine/ \
  && mkdir -p /home/$BITNAMI_APP_USER/redmine/plugins/redmine_s3 \
@@ -137,7 +140,7 @@ echo "Starting redmine server..."
 exec bundle exec rails server -b 0.0.0.0 -p 3000 -e production
 ```
 
-This script will automate the linking with the MariaDB service and setup the database connection parameters accordingly. It will also perform the database migration tasks before starting up the Redmine application server.
+This script automates the linking with the MariaDB service and sets up the Redmine database connection parameters accordingly. It also configures the Google cloud storage and performs the database migration tasks before starting up the Redmine application server.
 
 Build this image by running:
 
@@ -153,7 +156,7 @@ $ gcloud docker push gcr.io/<google-project-name>/redmine
 
 ## Create your cluster
 
-Ok, now you are ready to create your Container Engine cluster on which you'll run Redmine. A cluster consists of a master API server hosted by Google and a set of worker nodes.
+Now you are ready to create your Container Engine cluster on which you'll run Redmine. A cluster consists of a master API server hosted by Google and a set of worker nodes.
 
 Create a cluster named `redmine`:
 
@@ -177,13 +180,13 @@ Now that your cluster is up and running, everything is set to launch the Redmine
 
 ### Create persistent disk
 
-In this example we will make use of [persistent disks](https://cloud.google.com/compute/docs/disks/), allowing the database server to preserve its state across pod shutdown and startup.
+We will make use of [persistent disks](https://cloud.google.com/compute/docs/disks/) for MariaDB, allowing the database server to preserve its state across pod shutdown and startup.
 
 ```bash
 $ gcloud compute disks create --size 200GB mariadb-disk
 ```
 
-This disk will be used in the MariaDB pod definition.
+We will use the `mariadb-disk` in the MariaDB pod definition in the next step.
 
 ### MariaDB pod
 
@@ -230,7 +233,7 @@ spec:
             fsType: ext4
 ```
 
-**You should change the password to one of your choosing.**
+> **Note**": You should change the value of the `MARIADB_PASSWORD` env variable to one of your choosing.
 
 This file specifies a pod with a single container
 
@@ -290,18 +293,18 @@ mariadb   name=mariadb   name=mariadb   10.99.254.81   3306/TCP
 
 ## Create Redmine pod and service
 
-Now that you have the backend for Redmine up and running, lets start the Redmine web servers.
+Now that you have the backend for Redmine up and running, lets set up the Redmine web servers.
 
 ### Create Google cloud storage bucket
 
-We will be using a Google cloud storage bucket for persistence of files uploaded to our Redmine application. We will also generate a developer key using which the Redmine application will be able to access bucket.
+We will be using a Google cloud storage bucket for persistence of files uploaded to our Redmine application. We will also generate a developer key which will enable the Redmine application to access bucket.
 
 To create a bucket and developer key:
 
   1. Go to the [Google Developers Console](https://console.developers.google.com/).
-  2. Click the name of the project.
+  2. Click the name of your project.
   3. In the left sidebar, go to **Storage > Cloud Storage > Browser**.
-  4. Select **Create bucket** and give it the name `redmine-uploads`.
+  4. Select **Create bucket** and give it the name, eg. `redmine-uploads`.
 
   ![Create Bucket](images/create-bucket.png)
 
@@ -312,7 +315,7 @@ To create a bucket and developer key:
 
   ![Create Developer Key](images/create-developer-key.png)
 
-Make a note of the generated **Access Key** and **Secret** as it will be used in our pod description in the next step.
+Make a note of the generated **Access Key** and **Secret** as we will use in the Redmine pod definition in the next step.
 
 ### Redmine pod
 
@@ -365,8 +368,8 @@ spec:
 
 > **Note**:
 > 1. Change the image name to `gcr.io/<google-project-name>/redmine` as per the build instructions in [Create a Docker container image](#create-a-docker-container-image).
-> 2. Change the database password with the one specified in the `mariadb-controller.yml`
-> 3. Change the bucket name and developer key with the one generated in [Create Google cloud storage bucket](#create-google-cloud-storage-bucket)
+> 2. Change the `DATABASE_PASSWORD` env variable with the one specified in the `MARIADB_PASSWORD` env variable in `mariadb-controller.yml`
+> 3. Change the `GOOGLE_STORAGE_ACCESS_KEY_ID`, `GOOGLE_STORAGE_SECRET_ACCESS_KEY` and `GOOGLE_STORAGE_BUCKET` env variables the ones generated in [Create Google cloud storage bucket](#create-google-cloud-storage-bucket)
 
 It specifies 3 replicas of the server. Using this file, you can start your Redmine servers with:
 
@@ -390,7 +393,7 @@ Once the servers are up, you can list the pods in the cluster, to verify that th
 $ kubectl get pods
 ```
 
-You'll see a single MariaDB pod, and three Redmine pods (as well as some Container Engine infrastructure pods).
+You'll see a single MariaDB pod and three Redmine pods (as well as some Container Engine infrastructure pods).
 
 ### Redmine service
 
@@ -433,12 +436,7 @@ redmine   name=redmine   name=redmine   10.99.240.130   80/TCP
 
 By default, the pod is only accessible by its internal IP within the cluster. In order to make the Redmine service accessible from outside you have to open the firewall for port 80.
 
-```bash
-$ gcloud compute firewall-rules create --allow=tcp:80 \
-    --target-tags=gke-redmine-XXXX-node redmine
-```
-
-The value of `--target-tag` is the node prefix for the cluster up to `-node`. Find your node names with `kubectl get nodes`:
+First we need to get the node prefix for the cluster using `kubectl get nodes`:
 
 ```bash
 $ kubectl get nodes
@@ -446,6 +444,13 @@ NAME                             LABELS                                         
 gke-redmine-32bde88b-node-0xnf   kubernetes.io/hostname=gke-redmine-32bde88b-node-0xnf   Ready
 gke-redmine-32bde88b-node-8uuw   kubernetes.io/hostname=gke-redmine-32bde88b-node-8uuw   Ready
 gke-redmine-32bde88b-node-hru2   kubernetes.io/hostname=gke-redmine-32bde88b-node-hru2   Ready
+```
+
+The value of `--target-tag` in the command below is the node prefix for the cluster up to `-node`.
+
+```bash
+$ gcloud compute firewall-rules create --allow=tcp:80 \
+    --target-tags=gke-redmine-XXXX-node redmine
 ```
 
 You can alternatively open up port 80 from the [Developers Console](https://console.developers.google.com/).
@@ -473,30 +478,30 @@ Then, visit `http://x.x.x.x` where `x.x.x.x` is the IP address listed next to `L
 
 ## Scaling the Redmine application
 
-Suppose your Redmine app has been running for a while, and it gets a sudden burst of publicity. You decide it would be a good idea to add more web servers to your Redmine. You can do this easily, since your servers are defined as a service that uses a replication controller. Resize the number of pods in the replication controller as follows.
+Since the Redmine pod is defined as a service that uses a replication controller, you can easily resize the number of pods in the replication controller as follows:
 
 ```bash
 $ kubectl scale --replicas=5 rc redmine
 ```
 
-The configuration for that controller is updated, to specify that there should be 5 replicas running now. The replication controller adjusts the number of pods it is running to match that, and you will be able to see the additional pods running:
+The configuration for the redmine controller will be updated, to specify that there should be 5 replicas running. The replication controller adjusts the number of pods it is running to match that, and you will be able to see the additional pods running:
 
 ```bash
 $ kubectl get pods -l name=redmine
 ```
 
-Once your site has fallen back into obscurity, you can ramp down the number of web server pods in the same manner.
+You can scale down the number of Redmine pods in the same manner.
 
 ## Take down and restart Redmine
 
-Once you have Redmine up and running, try taking it down! Because you used persistent disks, your Redmine state is preserved even when the pods it's running on are deleted. Try it:
+Because we used a persistent disk for the MariaDB pod and used Google cloud storage for files uploaded in Redmine, your Redmine state is preserved even when the pods it's running on are deleted. Lets try it.
 
 ```bash
 $ kubectl delete rc redmine
 $ kubectl delete rc mariadb
 ```
 
-Deleting the replication controller, also deletes its pods.
+Deleting the replication controller also deletes its pods.
 
 Confirm that the pods have been deleted:
 
