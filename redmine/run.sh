@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-REDMINE_SECRET_SESSION_TOKEN=${REDMINE_SECRET_SESSION_TOKEN:-JXXnKhcTWTbRgChXFkWjC3zs3PrTq47qJPgWJRsnRXgHPJCs7VrwhpMVWdmh3rhM}
+REDMINE_SESSION_TOKEN=${REDMINE_SESSION_TOKEN:-JXXnKhcTWTbRgChXFkWjC3zs3PrTq47qJPgWJRsnRXgHPJCs7VrwhpMVWdmh3rhM}
 
 # automatically fetch database parameters from bitnami/mariadb
 DATABASE_HOST=${DATABASE_HOST:-${MARIADB_PORT_3306_TCP_ADDR}}
@@ -53,7 +53,7 @@ EOF
 
 # create the secret session token file
 cat > config/initializers/secret_token.rb <<EOF
-RedmineApp::Application.config.secret_key_base = '${REDMINE_SECRET_SESSION_TOKEN}'
+RedmineApp::Application.config.secret_key_base = '${REDMINE_SESSION_TOKEN}'
 EOF
 
 echo "Running database migrations..."

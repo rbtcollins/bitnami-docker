@@ -23,7 +23,7 @@ spec:
               value: redmine
             - name: DATABASE_PASSWORD
               value: secretpassword
-            - name: REDMINE_SECRET_SESSION_TOKEN
+            - name: REDMINE_SESSION_TOKEN
               value: MySecretSessionTokenProtectsMeFromBlackHats
             - name: GOOGLE_STORAGE_ACCESS_KEY_ID
               value: GOOGUF56OWN3R3LFYOZE
