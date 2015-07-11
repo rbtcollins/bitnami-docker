@@ -29,6 +29,11 @@ spec:
           volumeMounts:
             - name: mariadb-persistent-storage
               mountPath: /bitnami/mariadb/data
+          livenessProbe:
+            TCPSocket:
+              port: 3306
+            initialDelaySeconds: 30
+            timeoutSeconds: 1
       volumes:
         - name: mariadb-persistent-storage
           gcePersistentDisk:
