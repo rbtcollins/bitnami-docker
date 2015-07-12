@@ -86,11 +86,11 @@ DATABASE_NAME=${DATABASE_NAME:-${MARIADB_ENV_MARIADB_DATABASE}}
 DATABASE_USER=${DATABASE_USER:-${MARIADB_ENV_MARIADB_USER}}
 DATABASE_PASSWORD=${DATABASE_PASSWORD:-${MARIADB_ENV_MARIADB_PASSWORD}}
 
-# google cloud storage configuration (uploads)
-GOOGLE_STORAGE_ACCESS_KEY_ID=${GOOGLE_STORAGE_ACCESS_KEY_ID:-}
-GOOGLE_STORAGE_SECRET_ACCESS_KEY=${GOOGLE_STORAGE_SECRET_ACCESS_KEY:-}
-GOOGLE_STORAGE_BUCKET=${GOOGLE_STORAGE_BUCKET:-}
-GOOGLE_STORAGE_ENDPOINT=${GOOGLE_STORAGE_ENDPOINT:-storage.googleapis.com}
+# s3 / google cloud storage configuration (uploads)
+S3_ACCESS_KEY_ID=${S3_ACCESS_KEY_ID:-}
+S3_SECRET_ACCESS_KEY=${S3_SECRET_ACCESS_KEY:-}
+S3_BUCKET=${S3_BUCKET:-}
+S3_ENDPOINT=${S3_ENDPOINT:-storage.googleapis.com}
 
 if [[ -z ${DATABASE_HOST} || -z ${DATABASE_NAME} || \
       -z ${DATABASE_USER} || -z ${DATABASE_PASSWORD} ]]; then
@@ -100,10 +100,10 @@ if [[ -z ${DATABASE_HOST} || -z ${DATABASE_NAME} || \
   exit 1
 fi
 
-if [[ -z ${GOOGLE_STORAGE_ACCESS_KEY_ID} || -z ${GOOGLE_STORAGE_SECRET_ACCESS_KEY} ||
-      -z ${GOOGLE_STORAGE_BUCKET} || -z ${GOOGLE_STORAGE_ENDPOINT} ]]; then
+if [[ -z ${S3_ACCESS_KEY_ID} || -z ${S3_SECRET_ACCESS_KEY} ||
+      -z ${S3_BUCKET} || -z ${S3_ENDPOINT} ]]; then
   echo "ERROR: "
-  echo "  Please configure a google cloud storage bucket."
+  echo "  Please configure a s3 / google cloud storage bucket."
   echo "  Cannot continue. Aborting..."
   exit 1
 fi
@@ -122,10 +122,10 @@ EOF
 # configure cloud storage settings
 cat > config/s3.yml <<EOF
 production:
-  access_key_id: ${GOOGLE_STORAGE_ACCESS_KEY_ID}
-  secret_access_key: ${GOOGLE_STORAGE_SECRET_ACCESS_KEY}
-  bucket: ${GOOGLE_STORAGE_BUCKET}
-  endpoint: ${GOOGLE_STORAGE_ENDPOINT}
+  access_key_id: ${S3_ACCESS_KEY_ID}
+  secret_access_key: ${S3_SECRET_ACCESS_KEY}
+  bucket: ${S3_BUCKET}
+  endpoint: ${S3_ENDPOINT}
 EOF
 
 # create the secret session token file
@@ -354,11 +354,11 @@ spec:
               value: secretpassword
             - name: REDMINE_SESSION_TOKEN
               value: MySecretSessionTokenProtectsMeFromBlackHats
-            - name: GOOGLE_STORAGE_ACCESS_KEY_ID
+            - name: S3_ACCESS_KEY_ID
               value: GOOGUF56OWN3R3LFYOZE
-            - name: GOOGLE_STORAGE_SECRET_ACCESS_KEY
+            - name: S3_SECRET_ACCESS_KEY
               value: A+uW0XLz9Y+EHUGRUf1V2uApcI/TenhBtUnPao7i
-            - name: GOOGLE_STORAGE_BUCKET
+            - name: S3_BUCKET
               value: redmine-uploads
           ports:
             - containerPort: 3000
@@ -375,7 +375,7 @@ spec:
 > 1. Change the image name to `gcr.io/<google-project-name>/redmine` as per the build instructions in [Create a Docker container image](#create-a-docker-container-image).
 > 2. Change the value of `DATABASE_PASSWORD` with the one specified for `MARIADB_PASSWORD` in `mariadb-controller.yml`
 > 3. Change the value of `REDMINE_SESSION_TOKEN` to a alphanumeric string of your choosing.
-> 4. Change the values of `GOOGLE_STORAGE_ACCESS_KEY_ID`, `GOOGLE_STORAGE_SECRET_ACCESS_KEY` and `GOOGLE_STORAGE_BUCKET` with the ones generated in [Create Google cloud storage bucket](#create-google-cloud-storage-bucket)
+> 4. Change the values of `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` and `S3_BUCKET` with the ones generated in [Create Google cloud storage bucket](#create-google-cloud-storage-bucket)
 
 It specifies 3 replicas of the server. Using this file, you can start your Redmine servers with:
 

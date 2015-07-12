@@ -9,11 +9,11 @@ DATABASE_NAME=${DATABASE_NAME:-${MARIADB_ENV_MARIADB_DATABASE}}
 DATABASE_USER=${DATABASE_USER:-${MARIADB_ENV_MARIADB_USER}}
 DATABASE_PASSWORD=${DATABASE_PASSWORD:-${MARIADB_ENV_MARIADB_PASSWORD}}
 
-# google cloud storage configuration (uploads)
-GOOGLE_STORAGE_ACCESS_KEY_ID=${GOOGLE_STORAGE_ACCESS_KEY_ID:-}
-GOOGLE_STORAGE_SECRET_ACCESS_KEY=${GOOGLE_STORAGE_SECRET_ACCESS_KEY:-}
-GOOGLE_STORAGE_BUCKET=${GOOGLE_STORAGE_BUCKET:-}
-GOOGLE_STORAGE_ENDPOINT=${GOOGLE_STORAGE_ENDPOINT:-storage.googleapis.com}
+# s3 / google cloud storage configuration (uploads)
+S3_ACCESS_KEY_ID=${S3_ACCESS_KEY_ID:-}
+S3_SECRET_ACCESS_KEY=${S3_SECRET_ACCESS_KEY:-}
+S3_BUCKET=${S3_BUCKET:-}
+S3_ENDPOINT=${S3_ENDPOINT:-storage.googleapis.com}
 
 if [[ -z ${DATABASE_HOST} || -z ${DATABASE_NAME} || \
       -z ${DATABASE_USER} || -z ${DATABASE_PASSWORD} ]]; then
@@ -23,10 +23,10 @@ if [[ -z ${DATABASE_HOST} || -z ${DATABASE_NAME} || \
   exit 1
 fi
 
-if [[ -z ${GOOGLE_STORAGE_ACCESS_KEY_ID} || -z ${GOOGLE_STORAGE_SECRET_ACCESS_KEY} ||
-      -z ${GOOGLE_STORAGE_BUCKET} || -z ${GOOGLE_STORAGE_ENDPOINT} ]]; then
+if [[ -z ${S3_ACCESS_KEY_ID} || -z ${S3_SECRET_ACCESS_KEY} ||
+      -z ${S3_BUCKET} || -z ${S3_ENDPOINT} ]]; then
   echo "ERROR: "
-  echo "  Please configure a google cloud storage bucket."
+  echo "  Please configure a s3 / google cloud storage bucket."
   echo "  Cannot continue. Aborting..."
   exit 1
 fi
@@ -45,10 +45,10 @@ EOF
 # configure cloud storage settings
 cat > config/s3.yml <<EOF
 production:
-  access_key_id: ${GOOGLE_STORAGE_ACCESS_KEY_ID}
-  secret_access_key: ${GOOGLE_STORAGE_SECRET_ACCESS_KEY}
-  bucket: ${GOOGLE_STORAGE_BUCKET}
-  endpoint: ${GOOGLE_STORAGE_ENDPOINT}
+  access_key_id: ${S3_ACCESS_KEY_ID}
+  secret_access_key: ${S3_SECRET_ACCESS_KEY}
+  bucket: ${S3_BUCKET}
+  endpoint: ${S3_ENDPOINT}
 EOF
 
 # create the secret session token file
