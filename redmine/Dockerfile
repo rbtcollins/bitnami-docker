@@ -1,5 +1,5 @@
 FROM bitnami/ruby:latest
-ENV REDMINE_VERSION=3.0.3
+ENV REDMINE_VERSION=3.0.4
 
 RUN curl -L http://www.redmine.org/releases/redmine-${REDMINE_VERSION}.tar.gz \
       -o /tmp/redmine-${REDMINE_VERSION}.tar.gz \
