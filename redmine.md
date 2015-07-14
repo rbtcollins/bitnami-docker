@@ -399,7 +399,7 @@ Once the servers are up, you can list the pods in the cluster, to verify that th
 $ kubectl get pods
 ```
 
-You'll see a single MariaDB pod and three Redmine pods (as well as some Container Engine infrastructure pods).
+You'll see a single MariaDB pod and three Redmine pods.
 
 ### Redmine service
 
