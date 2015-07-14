@@ -14,7 +14,7 @@
   + [Redmine pod](#redmine-pod)
   + [Redmine service](#redmine-service)
 - [Allow external traffic](#allow-external-traffic)
-- [Access you Redmine server](#access-you-redmine-server)
+- [Access your Redmine server](#access-your-redmine-server)
 - [Scaling the Redmine application](#scaling-the-redmine-application)
 - [Take down and restart Redmine](#take-down-and-restart-redmine)
 - [Cleanup](#cleanup)
@@ -461,7 +461,7 @@ $ gcloud compute firewall-rules create --allow=tcp:80 \
 
 You can alternatively open up port 80 from the [Developers Console](https://console.developers.google.com/).
 
-## Access you Redmine server
+## Access your Redmine server
 
 Now that the firewall is open, you can access the service. Find the external IP of the service you just set up:
 
