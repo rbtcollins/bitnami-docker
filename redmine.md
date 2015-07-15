@@ -407,7 +407,7 @@ Once the servers are up, you can list the pods in the cluster, to verify that th
 $ kubectl get pods
 ```
 
-You'll see a single MariaDB pod and three Redmine pods.
+You'll see a single MariaDB pod and three Redmine pods. In [Scaling the Redmine application](#scaling-the-redmine-application) we will see how we can scale the Redmine pods.
 
 ### Redmine service
 
