@@ -336,7 +336,7 @@ Now that you have the backend for Redmine up and running, lets set up the Redmin
 
 ### Create Google cloud storage bucket
 
-We will be using a Google cloud storage bucket for persistence of files uploaded to our Redmine application. We will also generate a developer key which will enable the Redmine application to access bucket.
+We will be using a Google cloud storage bucket (in S3 interoperability mode) for persistence of files uploaded to our Redmine application. We will also generate a developer key which will enable the Redmine application to access bucket.
 
 To create a bucket and developer key:
 
