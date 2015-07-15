@@ -11,6 +11,7 @@
   + [MariaDB service](#mariadb-service)
 - [Create Redmine pod and service](#create-redmine-pod-and-service)
   + [Create Google cloud storage bucket](#create-google-cloud-storage-bucket)
+  + [Redmine secret store](#redmine-secret-store)
   + [Redmine pod](#redmine-pod)
   + [Redmine service](#redmine-service)
 - [Allow external traffic](#allow-external-traffic)
@@ -35,6 +36,7 @@ Download and unpack the `redmine.zip` file into your working directory. The ZIP 
 
   - Dockerfile
   - run.sh
+  - redmine-secrets.yml
   - redmine-controller.yml
   - redmine-service.yml
   - mariadb-controller.yml
@@ -349,6 +351,74 @@ To create a bucket and developer key:
 
 Make a note of the generated **Access Key** and **Secret** as we will use in the Redmine pod definition in the next step.
 
+### Redmine secret store
+
+A [secret key store](https://github.com/GoogleCloudPlatform/kubernetes/blob/master/docs/design/secrets.md) is intended to hold sensitive information such as passwords, access keys, etc. Having this information in a secret key store is safer and more flexible then putting in to our pod definition.
+
+We will create a resource to store the sensitive configuration parameters of our Redmine container. This includes, but is not limited to the database password, session token, cloud storage access key id and secret.
+
+Lets begin by encoding our secret data in base64, starting with the database password.
+
+```bash
+$ base64 <<< "secretpassword"
+c2VjcmV0cGFzc3dvcmQK
+```
+
+Next, we encode the google cloud storage access credentials as generated in [Create Google cloud storage bucket](#create-google-cloud-storage-bucket).
+
+```bash
+$ base64 <<< "GOOGUF56OWN3R3LFYOZE"
+R09PR1VGNTZPV04zUjNMRllPWkUK
+
+$ base64 <<< "A+uW0XLz9Y+EHUGRUf1V2uApcI/TenhBtUnPao7i"
+QSt1VzBYTHo5WStFSFVHUlVmMVYydUFwY0kvVGVuaEJ0VW5QYW83aQo=
+```
+
+Finally, we encode a random key that will be used by the Redmine application to encode cookies storing session data, thus preventing their tampering. It is recommended to use a key of length 30 characters or more.
+
+```bash
+$ base64 <<< "mCjVXBV6jZVn9RCKsHZFGBcVmpQd8l9s"
+bUNqVlhCVjZqWlZuOVJDS3NIWkZHQmNWbXBRZDhsOXMK
+```
+
+> **Tip**: `pwgen -csv1 64` will generate a strong 64 character key that can be used as the Redmine session key.*
+
+Now, we use this base64 encoded secret data in the secret definition described in `redmine-secret.yml`:
+
+```yaml
+apiVersion: "v1"
+kind: "Secret"
+metadata:
+  name: "redmine-secrets"
+  namespace: "default"
+  labels:
+    name: redmine-secrets
+data:
+  redmine-session-token: "bUNqVlhCVjZqWlZuOVJDS3NIWkZHQmNWbXBRZDhsOXMK"
+  database-password: "c2VjcmV0cGFzc3dvcmQK"
+  s3-access-key-id: "R09PR1VGNTZPV04zUjNMRllPWkUK"
+  s3-secret-access-key: "QSt1VzBYTHo5WStFSFVHUlVmMVYydUFwY0kvVGVuaEJ0VW5QYW83aQo="
+```
+
+> **Note**:
+> Update the values of `redmine-session-token`, `database-password`, `s3-access-key-id` and `s3-secret-access-key` values with the base64 encoded data generated above.
+
+Create the secret key store:
+
+```bash
+$ kubectl create -f redmine-secrets.yml
+```
+
+See it running:
+
+```bash
+$ kubectl get secrets -l name=redmine-secrets
+NAME              TYPE      DATA
+redmine-secrets   Opaque    4
+```
+
+This secret key store will be mounted at `/etc/redmine-secrets` in read-only mode in the Redmine pods.
+
 ### Redmine pod
 
 The controller and its pod template is described in the file `redmine-controller.yml`:
@@ -377,32 +447,31 @@ spec:
               value: redmine_production
             - name: DATABASE_USER
               value: redmine
-            - name: DATABASE_PASSWORD
-              value: secretpassword
-            - name: REDMINE_SESSION_TOKEN
-              value: MySecretSessionTokenProtectsMeFromBlackHats
-            - name: S3_ACCESS_KEY_ID
-              value: GOOGUF56OWN3R3LFYOZE
-            - name: S3_SECRET_ACCESS_KEY
-              value: A+uW0XLz9Y+EHUGRUf1V2uApcI/TenhBtUnPao7i
             - name: S3_BUCKET
               value: redmine-uploads
           ports:
             - containerPort: 3000
               protocol: TCP
+          volumeMounts:
+            - name: secrets
+              mountPath: /etc/redmine-secrets
+              readOnly: true
           livenessProbe:
             httpGet:
               path: /
               port: 3000
             initialDelaySeconds: 30
             timeoutSeconds: 1
+      volumes:
+        - name: secrets
+          secret:
+            secretName: redmine-secrets
+
 ```
 
 > **Note**:
 > 1. Change the image name to `gcr.io/<google-project-name>/redmine` as per the build instructions in [Create a Docker container image](#create-a-docker-container-image).
-> 2. Change the value of `DATABASE_PASSWORD` with the one specified for `MARIADB_PASSWORD` in `mariadb-controller.yml`
-> 3. Change the value of `REDMINE_SESSION_TOKEN` to a alphanumeric string of your choosing.
-> 4. Change the values of `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` and `S3_BUCKET` with the ones generated in [Create Google cloud storage bucket](#create-google-cloud-storage-bucket)
+> 2. Change the value of `S3_BUCKET` with the one generated in [Create Google cloud storage bucket](#create-google-cloud-storage-bucket)
 
 It specifies 3 replicas of the server. Using this file, you can start your Redmine servers with:
 
@@ -575,16 +644,22 @@ To delete your application completely:
   $ kubectl delete rc mariadb
   ```
 
-  4. Delete your cluster:
+  4. Delete the secret key store
+
+  ```bash
+  $ kubectl delete secret redmine-secrets
+  ```
+
+  5. Delete your cluster:
 
   ```bash
   $ gcloud beta container clusters delete redmine
   ```
 
-  5. Delete the disks:
+  6. Delete the disks:
 
   ```bash
   $ gcloud compute disks delete mariadb-disk
   ```
 
-  6. Delete the bucket and developer key from the [Google Developers Console](https://console.developers.google.com/)
+  7. Delete the bucket and developer key from the [Google Developers Console](https://console.developers.google.com/)
