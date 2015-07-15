@@ -648,38 +648,39 @@ Once the pods have restarted, the `redmine` and `mariadb` services pick them up 
 
 To delete your application completely:
 
-  1. Delete the firewall rule:
 
-  ```bash
-  $ gcloud compute firewall-rules delete redmine
-  ```
+*If you intend to teardown the entire cluster then jump to Step 5.*
 
-  *If you intend to teardown the entire cluster then jump to Step 5.*
-
-  2. Delete the services:
+  1. Delete the services:
 
   ```bash
   $ kubectl delete service redmine
   $ kubectl delete service mariadb
   ```
 
-  3. Delete the controller:
+  2. Delete the controller:
 
   ```bash
   $ kubectl delete rc redmine
   $ kubectl delete rc mariadb
   ```
 
-  4. Delete the secret key store
+  3. Delete the secret key store
 
   ```bash
   $ kubectl delete secret redmine-secrets
   ```
 
-  5. Delete your cluster:
+  4. Delete your cluster:
 
   ```bash
   $ gcloud beta container clusters delete redmine
+  ```
+
+  5. Delete the firewall rule:
+
+  ```bash
+  $ gcloud compute firewall-rules delete redmine
   ```
 
   6. Delete the disks:
