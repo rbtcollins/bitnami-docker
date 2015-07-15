@@ -222,7 +222,7 @@ We will use the `mariadb-disk` in the MariaDB pod definition in the next step.
 
 ### MariaDB pod
 
-The first thing that we're going to do is start up a [pod](https://cloud.google.com/container-engine/docs/pods) for MariaDB. We'll use a replication controller to create the pod—even though it's a single pod, the controller is still useful for monitoring health and restarting the pod if required.
+The first thing that we're going to do is start up a [pod](https://github.com/GoogleCloudPlatform/kubernetes/blob/master/docs/user-guide/pods.md) for MariaDB. We'll use a [replication controller](https://github.com/GoogleCloudPlatform/kubernetes/blob/master/docs/user-guide/replication-controller.md) to create the pod—even though it's a single pod, the controller is still useful for monitoring health and restarting the pod if required.
 
 We'll use this config file: `mariadb-controller.yml`. Take a look at its contents:
 
@@ -292,7 +292,7 @@ mariadb-mmae9   1/1       Running   0          31s
 
 ### MariaDB service
 
-A [service](https://cloud.google.com/container-engine/docs/services/) is an abstraction which defines a logical set of pods and a policy by which to access them. It is effectively a named load balancer that proxies traffic to one or more pods.
+A [service](https://github.com/GoogleCloudPlatform/kubernetes/blob/master/docs/user-guide/services.md) is an abstraction which defines a logical set of pods and a policy by which to access them. It is effectively a named load balancer that proxies traffic to one or more pods.
 
 When you set up a service, you tell it the pods to proxy based on pod labels. Note that the pod that you created in step one has the label `name=mariadb`.
 
