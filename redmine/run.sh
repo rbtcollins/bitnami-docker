@@ -9,11 +9,6 @@ DATABASE_NAME=${DATABASE_NAME:-${MARIADB_ENV_MARIADB_DATABASE}}
 DATABASE_USER=${DATABASE_USER:-${MARIADB_ENV_MARIADB_USER}}
 DATABASE_PASSWORD=${DATABASE_PASSWORD:-${MARIADB_ENV_MARIADB_PASSWORD}}
 
-# s3 / google cloud storage configuration (uploads)
-S3_ACCESS_KEY_ID=${S3_ACCESS_KEY_ID:-}
-S3_SECRET_ACCESS_KEY=${S3_SECRET_ACCESS_KEY:-}
-S3_BUCKET=${S3_BUCKET:-}
-S3_ENDPOINT=${S3_ENDPOINT:-storage.googleapis.com}
 
 if [[ -z ${DATABASE_HOST} || -z ${DATABASE_NAME} || \
       -z ${DATABASE_USER} || -z ${DATABASE_PASSWORD} ]]; then
@@ -22,6 +17,12 @@ if [[ -z ${DATABASE_HOST} || -z ${DATABASE_NAME} || \
   echo "  Cannot continue without a database. Aborting..."
   exit 1
 fi
+
+# s3 / google cloud storage configuration (uploads)
+S3_ACCESS_KEY_ID=${S3_ACCESS_KEY_ID:-}
+S3_SECRET_ACCESS_KEY=${S3_SECRET_ACCESS_KEY:-}
+S3_BUCKET=${S3_BUCKET:-}
+S3_ENDPOINT=${S3_ENDPOINT:-storage.googleapis.com}
 
 if [[ -z ${S3_ACCESS_KEY_ID} || -z ${S3_SECRET_ACCESS_KEY} ||
       -z ${S3_BUCKET} || -z ${S3_ENDPOINT} ]]; then
