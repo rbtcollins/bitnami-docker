@@ -241,7 +241,7 @@ spec:
     spec:
       containers:
         - name: mariadb
-          image: bitnami/mariadb
+          image: bitnami/mariadb:5.5.44-0-r01
           env:
             - name: MARIADB_DATABASE
               value: redmine_production
