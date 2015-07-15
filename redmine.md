@@ -199,8 +199,8 @@ A successful create response looks like:
 Creating cluster redmine...done.
 Created [.../projects/bitnami-tutorials/zones/us-central1-b/clusters/redmine].
 kubeconfig entry generated for redmine.
-NAME     ZONE           MASTER_VERSION  MASTER_IP      MACHINE_TYPE   STATUS
-redmine  us-central1-b  0.19.3          23.251.159.83  n1-standard-1  RUNNING
+NAME     ZONE           MASTER_VERSION  MASTER_IP       MACHINE_TYPE   STATUS
+redmine  us-central1-b  0.21.2          104.197.17.142  n1-standard-1  RUNNING
 ```
 
 Now that your cluster is up and running, everything is set to launch the Redmine app.
@@ -213,6 +213,9 @@ We will make use of [persistent disks](https://cloud.google.com/compute/docs/dis
 
 ```bash
 $ gcloud compute disks create --size 200GB mariadb-disk
+Created [.../projects/bitnami-tutorials/zones/us-central1-b/disks/mariadb-disk].
+NAME         ZONE          SIZE_GB TYPE        STATUS
+mariadb-disk us-central1-b 200     pd-standard READY
 ```
 
 We will use the `mariadb-disk` in the MariaDB pod definition in the next step.
@@ -284,7 +287,7 @@ Check to see if the pod is running. It may take a minute to change from `Pending
 ```bash
 $ kubectl get pods -l name=mariadb
 NAME            READY     REASON    RESTARTS   AGE
-mariadb-gfc2z   1/1       Running   0          4m
+mariadb-mmae9   1/1       Running   0          31s
 ```
 
 ### MariaDB service
@@ -323,8 +326,8 @@ See it running:
 
 ```bash
 $ kubectl get services mariadb
-NAME      LABELS         SELECTOR       IP(S)          PORT(S)
-mariadb   name=mariadb   name=mariadb   10.99.254.81   3306/TCP
+NAME      LABELS         SELECTOR       IP(S)           PORT(S)
+mariadb   name=mariadb   name=mariadb   10.99.253.149   3306/TCP
 ```
 
 ## Create Redmine pod and service
@@ -486,15 +489,20 @@ Check to see if the pod is running. It may take a few minutes to change from `Pe
 ```bash
 $ kubectl get pods -l name=redmine
 NAME            READY     REASON    RESTARTS   AGE
-redmine-77gyd   1/1       Running   0          35s
-redmine-fea4b   1/1       Running   0          35s
-redmine-mjlft   1/1       Running   0          35s
+redmine-lxfmy   1/1       Running   0          1m
+redmine-nqzqc   1/1       Running   0          1m
+redmine-zrc9d   1/1       Running   0          1m
 ```
 
 Once the servers are up, you can list the pods in the cluster, to verify that they're all running:
 
 ```bash
 $ kubectl get pods
+NAME            READY     REASON    RESTARTS   AGE
+mariadb-mmae9   1/1       Running   0          3m
+redmine-lxfmy   1/1       Running   0          1m
+redmine-nqzqc   1/1       Running   0          1m
+redmine-zrc9d   1/1       Running   0          1m
 ```
 
 You'll see a single MariaDB pod and three Redmine pods. In [Scaling the Redmine application](#scaling-the-redmine-application) we will see how we can scale the Redmine pods.
@@ -533,7 +541,7 @@ See it running:
 ```bash
 $ kubectl get services redmine
 NAME      LABELS         SELECTOR       IP(S)           PORT(S)
-redmine   name=redmine   name=redmine   10.99.240.130   80/TCP
+redmine   name=redmine   name=redmine   10.99.248.210   80/TCP
 ```
 
 ## Allow external traffic
@@ -545,16 +553,24 @@ First we need to get the node prefix for the cluster using `kubectl get nodes`:
 ```bash
 $ kubectl get nodes
 NAME                             LABELS                                                  STATUS
-gke-redmine-32bde88b-node-0xnf   kubernetes.io/hostname=gke-redmine-32bde88b-node-0xnf   Ready
-gke-redmine-32bde88b-node-8uuw   kubernetes.io/hostname=gke-redmine-32bde88b-node-8uuw   Ready
-gke-redmine-32bde88b-node-hru2   kubernetes.io/hostname=gke-redmine-32bde88b-node-hru2   Ready
+gke-redmine-08042373-node-3djt   kubernetes.io/hostname=gke-redmine-08042373-node-3djt   Ready
+gke-redmine-08042373-node-73j3   kubernetes.io/hostname=gke-redmine-08042373-node-73j3   Ready
+gke-redmine-08042373-node-wu4g   kubernetes.io/hostname=gke-redmine-08042373-node-wu4g   Ready
 ```
 
 The value of `--target-tag` in the command below is the node prefix for the cluster up to `-node`.
 
 ```bash
 $ gcloud compute firewall-rules create --allow=tcp:80 \
-    --target-tags=gke-redmine-XXXX-node redmine
+    --target-tags=gke-redmine-08042373-node redmine
+```
+
+A successful response looks like:
+
+```bash
+Created [.../projects/bitnami-tutorials/global/firewalls/redmine].
+NAME    NETWORK SRC_RANGES RULES  SRC_TAGS TARGET_TAGS
+redmine default 0.0.0.0/0  tcp:80          gke-redmine-08042373-node
 ```
 
 You can alternatively open up port 80 from the [Developers Console](https://console.developers.google.com/).
@@ -569,11 +585,11 @@ Name:                   redmine
 Labels:                 name=redmine
 Selector:               name=redmine
 Type:                   LoadBalancer
-IP:                     0.99.249.169
-LoadBalancer Ingress:   104.197.21.152
+IP:                     10.99.248.210
+LoadBalancer Ingress:   104.197.52.11
 Port:                   <unnamed> 80/TCP
-NodePort:               <unnamed> 31322/TCP
-Endpoints:              10.96.0.5:3000,10.96.0.6:3000,10.96.2.4:3000
+NodePort:               <unnamed> 31512/TCP
+Endpoints:              10.96.0.5:3000,10.96.2.4:3000,10.96.2.5:3000
 Session Affinity:       None
 No events.
 ```
@@ -592,6 +608,12 @@ The configuration for the redmine controller will be updated, to specify that th
 
 ```bash
 $ kubectl get pods -l name=redmine
+NAME            READY     REASON    RESTARTS   AGE
+redmine-lmbph   1/1       Running   1          54s
+redmine-lxfmy   1/1       Running   1          25m
+redmine-nqzqc   1/1       Running   0          25m
+redmine-qyvl8   1/1       Running   0          54s
+redmine-zrc9d   1/1       Running   1          25m
 ```
 
 You can scale down the number of Redmine pods in the same manner.
