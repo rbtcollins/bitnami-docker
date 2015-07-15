@@ -654,6 +654,8 @@ To delete your application completely:
   $ gcloud compute firewall-rules delete redmine
   ```
 
+  *If you intend to teardown the entire cluster then jump to Step 5.*
+
   2. Delete the services:
 
   ```bash
