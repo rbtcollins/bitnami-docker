@@ -1,7 +1,14 @@
 #!/bin/bash
 set -e
 
-REDMINE_SESSION_TOKEN=${REDMINE_SESSION_TOKEN:-rXvLWjqs4tqKNjdHgkqTLjqfj4wWkLCr}
+REDMINE_SESSION_TOKEN=${REDMINE_SESSION_TOKEN:-}
+
+if [[ -z ${REDMINE_SESSION_TOKEN} ]]; then
+  echo "ERROR: "
+  echo "  Please configure a secret session token."
+  echo "  Cannot continue. Aborting..."
+  exit 1
+fi
 
 # automatically fetch database parameters from bitnami/mariadb
 DATABASE_HOST=${DATABASE_HOST:-${MARIADB_PORT_3306_TCP_ADDR}}
