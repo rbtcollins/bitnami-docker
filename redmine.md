@@ -649,7 +649,7 @@ Once the pods have restarted, the `redmine` and `mariadb` services pick them up 
 To delete your application completely:
 
 
-*If you intend to teardown the entire cluster then jump to Step 5.*
+*If you intend to teardown the entire cluster then jump to Step 4.*
 
   1. Delete the services:
 
