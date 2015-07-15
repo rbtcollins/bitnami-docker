@@ -47,7 +47,7 @@ The Redmine image is built using the `Dockerfile` and `run.sh` script. Docker co
 Take a look the the `Dockerfile` contents:
 
 ```dockerfile
-FROM bitnami/ruby:latest
+FROM bitnami/ruby:2.2.2-5
 ENV REDMINE_VERSION=3.0.4
 
 RUN curl -L http://www.redmine.org/releases/redmine-${REDMINE_VERSION}.tar.gz \
