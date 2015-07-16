@@ -1,8 +1,8 @@
-
 # Redmine Tutorial
 
-- [Before you begin](#before-you-begin)
-- [Download the configuration files](#download-the-configuration-files)
+- [Prerequisites](#Prerequisites)
+  + [Before you begin](#before-you-begin)
+  + [Download the configuration files](#download-the-configuration-files)
 - [Create a Docker container image](#create-a-docker-container-image)
 - [Create your cluster](#create-your-cluster)
 - [Create MariaDB pod and service](#create-mariadb-pod-and-service)
@@ -26,11 +26,13 @@ We create a Docker container image using the Redmine source code and also instal
 
 The tutorial also demonstrates the setup of Redmine on an external IP, load balancing to a set of replicated servers backed by replicated Redmine nodes.
 
-## Before you begin
+## Prerequisites
+
+### Before you begin
 
 Follow the instructions on the [Before You Begin](https://cloud.google.com/container-engine/docs/before-you-begin) page to set up your Container Engine environment.
 
-## Download the configuration files
+### Download the configuration files
 
 Download and unpack the `redmine.zip` file into your working directory. The ZIP file contains the configuration files used in this tutorial:
 
