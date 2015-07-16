@@ -1,7 +1,7 @@
 # Redmine Tutorial
 
 - [Prerequisites](#Prerequisites)
-  + [Before you begin](#before-you-begin)
+  + [Container engine environment](#container-engine-environment)
   + [Download the configuration files](#download-the-configuration-files)
 - [Create a Docker container image](#create-a-docker-container-image)
 - [Create your cluster](#create-your-cluster)
@@ -28,9 +28,9 @@ The tutorial also demonstrates the setup of Redmine on an external IP, load bala
 
 ## Prerequisites
 
-### Before you begin
+### Container engine environment
 
-Follow the instructions on the [Before You Begin](https://cloud.google.com/container-engine/docs/before-you-begin) page to set up your Container Engine environment.
+Follow the instructions in the Google [Before You Begin](https://cloud.google.com/container-engine/docs/before-you-begin) guide to set up your Container Engine environment.
 
 ### Download the configuration files
 
