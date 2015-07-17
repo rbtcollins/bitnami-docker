@@ -1,8 +1,8 @@
-# Redmine Tutorial
 
-- [Prerequisites](#prerequisites)
-  + [Container engine environment](#container-engine-environment)
-  + [Download the configuration files](#download-the-configuration-files)
+# Scalable Redmine Using Bitnami Containers, Kubernetes and Google Cloud Platform
+
+- [Before you begin](#before-you-begin)
+- [Download the configuration files](#download-the-configuration-files)
 - [Create a Docker container image](#create-a-docker-container-image)
 - [Create your cluster](#create-your-cluster)
 - [Create MariaDB pod and service](#create-mariadb-pod-and-service)
@@ -20,21 +20,22 @@
 - [Take down and restart Redmine](#take-down-and-restart-redmine)
 - [Cleanup](#cleanup)
 
-This tutorial walks you through setting up [Redmine](http://redmine.org), backup by a MariaDB database and running on the Google Container Engine.
+This tutorial walks through setting up a scalable [Redmine](http://redmine.org) installation on Google Container Engine using the Bitnami Container Images for Docker. If you're just looking for the quickest way to get Redmine up and running you might prefer our [prebuilt installers, VMs and Cloud Images](http://www.bitnami.com/stack/redmine). If you're interested in getting hands on with Kubernetes and Google Container Engine, read on....
 
-We create a Docker container image using the Redmine source code and also install the [Redmine S3](https://github.com/ka8725/redmine_s3) plugin to enable persistence of file uploads via [Google cloud storage](https://cloud.google.com/storage/).
+!SPB Quick architecture diagram here!
 
-The tutorial also demonstrates the setup of Redmine on an external IP, load balancing to a set of replicated servers backed by replicated Redmine nodes.
 
-## Prerequisites
+We'll be creating a scalable Redmine installation backed by an instance of MariaDB. We also configure load balancing, an external IP, a secret store and health checks. We use [Google Cloud Storage](https://cloud.google.com/storage/) for persistent file uploads.
 
-### Container engine environment
+## Before you begin
 
-Follow the instructions in the Google [Before You Begin](https://cloud.google.com/container-engine/docs/before-you-begin) guide to set up your Container Engine environment.
+Set up your Google Container Engine environment using [these instructions](https://cloud.google.com/container-engine/docs/before-you-begin).
 
-### Download the configuration files
+## Download the configuration files
 
-Download and unpack the `redmine.zip` file into your working directory. The ZIP file contains the configuration files used in this tutorial:
+!SPB Move these to a GitHub repo and pull them. Perhaps the bitnami-docker repo?!
+
+We'll be using these files to deploy and configure Redmine :
 
   - Dockerfile
   - run.sh
@@ -48,132 +49,11 @@ Download and unpack the `redmine.zip` file into your working directory. The ZIP 
 
 The Redmine image is built using the `Dockerfile` and `run.sh` script. Docker container images can extend from other existing images so for this image, we'll extend from the existing `bitnami/ruby` image.
 
-Take a look the the `Dockerfile` contents:
+The `Dockerfile` imports the correct Redmine and Redmine S3 plug-in source code and a `run.sh` script. 
 
-```dockerfile
-FROM bitnami/ruby:2.2.2-5
-ENV REDMINE_VERSION=3.0.4
+The `run.sh` script automates links the MariaDB service and sets up the Redmine database connection parameters. It also configures Google Cloud Storage and performs database migration tasks before starting up the Redmine application server.
 
-RUN curl -L http://www.redmine.org/releases/redmine-${REDMINE_VERSION}.tar.gz \
-      -o /tmp/redmine-${REDMINE_VERSION}.tar.gz \
- && curl -L https://github.com/ka8725/redmine_s3/archive/master.tar.gz \
-      -o /tmp/redmine_s3.tar.gz \
- && mkdir -p /home/$BITNAMI_APP_USER/redmine/ \
- && tar -xf /tmp/redmine-${REDMINE_VERSION}.tar.gz --strip=1 -C /home/$BITNAMI_APP_USER/redmine/ \
- && mkdir -p /home/$BITNAMI_APP_USER/redmine/plugins/redmine_s3 \
- && tar -xf /tmp/redmine_s3.tar.gz --strip=1 -C /home/$BITNAMI_APP_USER/redmine/plugins/redmine_s3 \
- && cd /home/$BITNAMI_APP_USER/redmine \
- && cp -a config/database.yml.example config/database.yml \
- && cp -a plugins/redmine_s3/config/s3.yml.example config/s3.yml \
- && bundle install --without development test \
- && chown -R $BITNAMI_APP_USER:$BITNAMI_APP_USER /home/$BITNAMI_APP_USER/redmine/ \
- && rm -rf /tmp/redmine-${REDMINE_VERSION}.tar.gz /tmp/redmine_s3.tar.gz
-
-COPY run.sh /home/$BITNAMI_APP_USER/redmine/run.sh
-RUN sudo chmod 755 /home/$BITNAMI_APP_USER/redmine/run.sh
-
-WORKDIR /home/$BITNAMI_APP_USER/redmine/
-CMD ["/home/bitnami/redmine/run.sh"]
-```
-
-Next, lets take a look at the `run.sh` script referenced in the `Dockerfile`.
-
-```bash
-#!/bin/bash
-set -e
-
-REDMINE_SESSION_TOKEN=${REDMINE_SESSION_TOKEN:-}
-
-# lookup REDMINE_SESSION_TOKEN configuration in secrets volume
-if [[ -z ${REDMINE_SESSION_TOKEN} && -f /etc/redmine-secrets/redmine-session-token ]]; then
-  REDMINE_SESSION_TOKEN=$(cat /etc/redmine-secrets/redmine-session-token)
-fi
-
-if [[ -z ${REDMINE_SESSION_TOKEN} ]]; then
-  echo "ERROR: "
-  echo "  Please configure a secret session token."
-  echo "  Cannot continue. Aborting..."
-  exit 1
-fi
-
-# automatically fetch database parameters from bitnami/mariadb
-DATABASE_HOST=${DATABASE_HOST:-${MARIADB_PORT_3306_TCP_ADDR}}
-DATABASE_NAME=${DATABASE_NAME:-${MARIADB_ENV_MARIADB_DATABASE}}
-DATABASE_USER=${DATABASE_USER:-${MARIADB_ENV_MARIADB_USER}}
-DATABASE_PASSWORD=${DATABASE_PASSWORD:-${MARIADB_ENV_MARIADB_PASSWORD}}
-
-# lookup DATABASE_PASSWORD configuration in secrets volume
-if [[ -z ${DATABASE_PASSWORD} && -f /etc/redmine-secrets/database-password ]]; then
-  DATABASE_PASSWORD=$(cat /etc/redmine-secrets/database-password)
-fi
-
-if [[ -z ${DATABASE_HOST} || -z ${DATABASE_NAME} || \
-      -z ${DATABASE_USER} || -z ${DATABASE_PASSWORD} ]]; then
-  echo "ERROR: "
-  echo "  Please configure the database connection."
-  echo "  Cannot continue without a database. Aborting..."
-  exit 1
-fi
-
-# s3 / google cloud storage configuration (uploads)
-S3_ACCESS_KEY_ID=${S3_ACCESS_KEY_ID:-}
-S3_SECRET_ACCESS_KEY=${S3_SECRET_ACCESS_KEY:-}
-S3_BUCKET=${S3_BUCKET:-}
-S3_ENDPOINT=${S3_ENDPOINT:-storage.googleapis.com}
-
-# lookup S3_ACCESS_KEY_ID configuration in secrets volume
-if [[ -z ${S3_ACCESS_KEY_ID} && -f /etc/redmine-secrets/s3-access-key-id ]]; then
-  S3_ACCESS_KEY_ID=$(cat /etc/redmine-secrets/s3-access-key-id)
-fi
-
-# lookup S3_SECRET_ACCESS_KEY configuration in secrets volume
-if [[ -z ${S3_SECRET_ACCESS_KEY} && -f /etc/redmine-secrets/s3-secret-access-key ]]; then
-  S3_SECRET_ACCESS_KEY=$(cat /etc/redmine-secrets/s3-secret-access-key)
-fi
-
-if [[ -z ${S3_ACCESS_KEY_ID} || -z ${S3_SECRET_ACCESS_KEY} ||
-      -z ${S3_BUCKET} || -z ${S3_ENDPOINT} ]]; then
-  echo "ERROR: "
-  echo "  Please configure a s3 / google cloud storage bucket."
-  echo "  Cannot continue. Aborting..."
-  exit 1
-fi
-
-# configure redmine database connection settings
-cat > config/database.yml <<EOF
-production:
-  adapter: mysql2
-  database: ${DATABASE_NAME}
-  host: ${DATABASE_HOST}
-  username: ${DATABASE_USER}
-  password: "${DATABASE_PASSWORD}"
-  encoding: utf8
-EOF
-
-# configure cloud storage settings
-cat > config/s3.yml <<EOF
-production:
-  access_key_id: ${S3_ACCESS_KEY_ID}
-  secret_access_key: ${S3_SECRET_ACCESS_KEY}
-  bucket: ${S3_BUCKET}
-  endpoint: ${S3_ENDPOINT}
-EOF
-
-# create the secret session token file
-cat > config/initializers/secret_token.rb <<EOF
-RedmineApp::Application.config.secret_key_base = '${REDMINE_SESSION_TOKEN}'
-EOF
-
-echo "Running database migrations..."
-bundle exec rake db:migrate RAILS_ENV=production
-
-echo "Starting redmine server..."
-exec bundle exec rails server -b 0.0.0.0 -p 3000 -e production
-```
-
-This script automates the linking with the MariaDB service and sets up the Redmine database connection parameters accordingly. It also configures the Google cloud storage and performs the database migration tasks before starting up the Redmine application server.
-
-Build this image by running:
+Build the Redmine image by running:
 
 ```bash
 $ docker build -t gcr.io/<google-project-name>/redmine .
@@ -187,7 +67,7 @@ $ gcloud docker push gcr.io/<google-project-name>/redmine
 
 ## Create your cluster
 
-Now you are ready to create your Container Engine cluster on which you'll run Redmine. A cluster consists of a master API server hosted by Google and a set of worker nodes.
+Now you are ready to create the cluster on which you'll run Redmine. A cluster consists of a master API server hosted by Google and a set of worker nodes.
 
 Create a cluster named `redmine`:
 
@@ -224,59 +104,11 @@ We will use the `mariadb-disk` in the MariaDB pod definition in the next step.
 
 ### MariaDB pod
 
-The first thing that we're going to do is start up a [pod](https://github.com/GoogleCloudPlatform/kubernetes/blob/master/docs/user-guide/pods.md) for MariaDB. We'll use a [replication controller](https://github.com/GoogleCloudPlatform/kubernetes/blob/master/docs/user-guide/replication-controller.md) to create the pod—even though it's a single pod, the controller is still useful for monitoring health and restarting the pod if required.
+The first thing that we're going to do is start a [pod](https://github.com/GoogleCloudPlatform/kubernetes/blob/master/docs/user-guide/pods.md) for MariaDB. We'll use a [replication controller](https://github.com/GoogleCloudPlatform/kubernetes/blob/master/docs/user-guide/replication-controller.md) to create the pod—even though it's a single pod, the controller is still useful for monitoring health and restarting the pod if required.
 
-We'll use this config file: `mariadb-controller.yml`. Take a look at its contents:
-
-```yaml
-apiVersion: v1
-kind: ReplicationController
-metadata:
-  name: mariadb
-  labels:
-    name: mariadb
-spec:
-  replicas: 1
-  selector:
-    name: mariadb
-  template:
-    metadata:
-      labels:
-        name: mariadb
-    spec:
-      containers:
-        - name: mariadb
-          image: bitnami/mariadb:5.5.44-0-r01
-          args:
-            - --max_connect_errors=1000
-          env:
-            - name: MARIADB_DATABASE
-              value: redmine_production
-            - name: MARIADB_USER
-              value: redmine
-            - name: MARIADB_PASSWORD
-              value: secretpassword
-          ports:
-            - containerPort: 3306
-              name: mariadb
-          volumeMounts:
-            - name: mariadb-persistent-storage
-              mountPath: /bitnami/mariadb/data
-          livenessProbe:
-            TCPSocket:
-              port: 3306
-            initialDelaySeconds: 30
-            timeoutSeconds: 1
-      volumes:
-        - name: mariadb-persistent-storage
-          gcePersistentDisk:
-            pdName: mariadb-disk
-            fsType: ext4
-```
+We'll use the config file `mariadb-controller.yml` for the database pod. The pod containers a single container. 
 
 > **Note**": You should change the value of the `MARIADB_PASSWORD` env variable to one of your choosing.
-
-This file specifies a pod with a single container
 
 To create the pod:
 
@@ -300,22 +132,6 @@ When you set up a service, you tell it the pods to proxy based on pod labels. No
 
 We'll use the file `mariadb-service.yml` to create a service for MariaDB:
 
-```yaml
-apiVersion: v1
-kind: Service
-metadata:
-  name: mariadb
-  labels:
-    name: mariadb
-spec:
-  ports:
-    - port: 3306
-      targetPort: 3306
-      protocol: TCP
-  selector:
-    name: mariadb
-```
-
 The `selector` field of the service configuration determines which pods will receive the traffic sent to the service. So, the configuration is specifying that we want this service to point to pods labeled with `name=mariadb`.
 
 Start the service:
@@ -334,11 +150,11 @@ mariadb   name=mariadb   name=mariadb   10.99.253.149   3306/TCP
 
 ## Create Redmine pod and service
 
-Now that you have the backend for Redmine up and running, lets set up the Redmine web servers.
+Now that you have the database up and running, lets set up the Redmine web servers.
 
 ### Create Google cloud storage bucket
 
-We will be using a Google cloud storage bucket (in S3 interoperability mode) for persistence of files uploaded to our Redmine application. We will also generate a developer key which will enable the Redmine application to access bucket.
+We will be using a Google cloud storage bucket, in S3 interoperability mode, for persistence of files uploaded to our Redmine application. We will also generate a developer key which will enable the Redmine application to access the bucket.
 
 To create a bucket and developer key:
 
@@ -381,7 +197,7 @@ $ base64 <<< "A+uW0XLz9Y+EHUGRUf1V2uApcI/TenhBtUnPao7i"
 QSt1VzBYTHo5WStFSFVHUlVmMVYydUFwY0kvVGVuaEJ0VW5QYW83aQo=
 ```
 
-Finally, we encode a random key that will be used by the Redmine application to encode cookies storing session data, thus preventing their tampering. It is recommended to use a key of length 30 characters or more.
+Finally, we encode a random key that will be used by the Redmine application to encode cookies storing session data. It is recommended to use a key of length 30 characters or more.
 
 ```bash
 $ base64 <<< "mCjVXBV6jZVn9RCKsHZFGBcVmpQd8l9s"
@@ -424,57 +240,11 @@ NAME              TYPE      DATA
 redmine-secrets   Opaque    4
 ```
 
-This secret key store will be mounted at `/etc/redmine-secrets` in read-only mode in the Redmine pods.
+This secret key store will be mounted at `/etc/redmine-secrets` as read-only in the Redmine pods.
 
 ### Redmine pod
 
-The controller and its pod template is described in the file `redmine-controller.yml`:
-
-```yaml
-apiVersion: v1
-kind: ReplicationController
-metadata:
-  name: redmine
-  labels:
-    name: redmine
-spec:
-  replicas: 3
-  selector:
-    name: redmine
-  template:
-    metadata:
-      labels:
-        name: redmine
-    spec:
-      containers:
-        - name: redmine
-          image: gcr.io/bitnami-tutorials/redmine
-          env:
-            - name: DATABASE_NAME
-              value: redmine_production
-            - name: DATABASE_USER
-              value: redmine
-            - name: S3_BUCKET
-              value: redmine-uploads
-          ports:
-            - containerPort: 3000
-              protocol: TCP
-          volumeMounts:
-            - name: secrets
-              mountPath: /etc/redmine-secrets
-              readOnly: true
-          livenessProbe:
-            httpGet:
-              path: /
-              port: 3000
-            initialDelaySeconds: 30
-            timeoutSeconds: 1
-      volumes:
-        - name: secrets
-          secret:
-            secretName: redmine-secrets
-
-```
+The controller and its pod template is described in the file `redmine-controller.yml`.
 
 > **Note**:
 > 1. Change the image name to `gcr.io/<google-project-name>/redmine` as per the build instructions in [Create a Docker container image](#create-a-docker-container-image).
@@ -513,25 +283,7 @@ You'll see a single MariaDB pod and three Redmine pods. In [Scaling the Redmine 
 
 As with the other pods, we want a service to group the Redmine server pods. However, this time it's different: this service is user-facing, so we want it to be externally visible. That is, we want a client to be able to request the service from outside the cluster. To accomplish this, we can set the `type: LoadBalancer` field in the service configuration.
 
-The service specification for the Redmine is in `redmine-service.yml`:
-
-```yaml
-apiVersion: v1
-kind: Service
-metadata:
-  name: redmine
-  labels:
-    name: redmine
-spec:
-  type: LoadBalancer
-  ports:
-    - port: 80
-      targetPort: 3000
-      protocol: TCP
-  selector:
-    name: redmine
-```
-
+The service specification for the Redmine is in `redmine-service.yml`.
 Start up the service:
 
 ```bash
@@ -548,7 +300,7 @@ redmine   name=redmine   name=redmine   10.99.248.210   80/TCP
 
 ## Allow external traffic
 
-By default, the pod is only accessible by its internal IP within the cluster. In order to make the Redmine service accessible from outside you have to open the firewall for port 80.
+By default, the pod is only accessible by its internal IP within the cluster. In order to make the Redmine service accessible from the Internet we have to open port 80.
 
 First we need to get the node prefix for the cluster using `kubectl get nodes`:
 
