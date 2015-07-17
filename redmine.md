@@ -1,6 +1,6 @@
 # Redmine Tutorial
 
-- [Prerequisites](#Prerequisites)
+- [Prerequisites](#prerequisites)
   + [Container engine environment](#container-engine-environment)
   + [Download the configuration files](#download-the-configuration-files)
 - [Create a Docker container image](#create-a-docker-container-image)
