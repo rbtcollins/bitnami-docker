@@ -1,8 +1,9 @@
 
 # Scalable Redmine Using Bitnami Containers, Kubernetes and Google Cloud Platform
 
-- [Before you begin](#before-you-begin)
-- [Download the configuration files](#download-the-configuration-files)
+- [Prerequisites](#prerequisites)
+  + [Container engine environment](#container-engine-environment)
+  + [Download the configuration files](#download-the-configuration-files)
 - [Create a Docker container image](#create-a-docker-container-image)
 - [Create your cluster](#create-your-cluster)
 - [Create MariaDB pod and service](#create-mariadb-pod-and-service)
@@ -27,11 +28,13 @@ This tutorial walks through setting up a scalable [Redmine](http://redmine.org) 
 
 We'll be creating a scalable Redmine installation backed by an instance of MariaDB. We also configure load balancing, an external IP, a secret store and health checks. We use [Google Cloud Storage](https://cloud.google.com/storage/) for persistent file uploads.
 
-## Before you begin
+## Prerequisites
+
+### Container engine environment
 
 Set up your Google Container Engine environment using [these instructions](https://cloud.google.com/container-engine/docs/before-you-begin).
 
-## Download the configuration files
+### Download the configuration files
 
 !SPB Move these to a GitHub repo and pull them. Perhaps the bitnami-docker repo?!
 
