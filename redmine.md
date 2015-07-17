@@ -6,11 +6,11 @@
   + [Download the configuration files](#download-the-configuration-files)
 - [Create a Docker container image](#create-a-docker-container-image)
 - [Create your cluster](#create-your-cluster)
-- [Create MariaDB pod and service](#create-mariadb-pod-and-service)
+- [MariaDB pod and service](#mariadb-pod-and-service)
   + [Create persistent disk](#create-persistent-disk)
   + [MariaDB pod](#mariadb-pod)
   + [MariaDB service](#mariadb-service)
-- [Create Redmine pod and service](#create-redmine-pod-and-service)
+- [Redmine pod and service](#redmine-pod-and-service)
   + [Create Google cloud storage bucket](#create-google-cloud-storage-bucket)
   + [Redmine secret store](#redmine-secret-store)
   + [Redmine pod](#redmine-pod)
@@ -90,7 +90,7 @@ redmine  us-central1-b  0.21.2          104.197.17.142  n1-standard-1  RUNNING
 
 Now that your cluster is up and running, everything is set to launch the Redmine app.
 
-## Create MariaDB pod and service
+## MariaDB pod and service
 
 ### Create persistent disk
 
@@ -151,7 +151,7 @@ NAME      LABELS         SELECTOR       IP(S)           PORT(S)
 mariadb   name=mariadb   name=mariadb   10.99.253.149   3306/TCP
 ```
 
-## Create Redmine pod and service
+## Redmine pod and service
 
 Now that you have the database up and running, lets set up the Redmine web servers.
 
