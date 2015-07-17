@@ -207,7 +207,7 @@ $ base64 <<< "mCjVXBV6jZVn9RCKsHZFGBcVmpQd8l9s"
 bUNqVlhCVjZqWlZuOVJDS3NIWkZHQmNWbXBRZDhsOXMK
 ```
 
-> **Tip**: `pwgen -csv1 64` will generate a strong 64 character key that can be used as the Redmine session key.*
+> **Tip**: `pwgen -csv1 64` will generate a strong 64 character key that can be used as the Redmine session key.
 
 Now, we use this base64 encoded secret data in the secret definition described in `redmine-secret.yml`:
 
