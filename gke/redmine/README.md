@@ -154,6 +154,10 @@ NAME      LABELS         SELECTOR       IP(S)           PORT(S)
 mariadb   name=mariadb   name=mariadb   10.99.253.149   3306/TCP
 ```
 
+The following diagram illustrates the MariaDB pod and service configuration.
+
+![Redmine](images/mariadb.png)
+
 ## Redmine pod and service
 
 Now that you have the database up and running, lets set up the Redmine web servers.
@@ -303,6 +307,10 @@ $ kubectl get services redmine
 NAME      LABELS         SELECTOR       IP(S)           PORT(S)
 redmine   name=redmine   name=redmine   10.99.248.210   80/TCP
 ```
+
+The following diagram illustrates the Redmine pod and service configuration.
+
+![Redmine](images/redmine.png)
 
 ## Allow external traffic
 
