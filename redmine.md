@@ -25,7 +25,6 @@ This tutorial walks through setting up a scalable [Redmine](http://redmine.org) 
 
 !SPB Quick architecture diagram here!
 
-
 We'll be creating a scalable Redmine installation backed by an instance of MariaDB. We also configure load balancing, an external IP, a secret store and health checks. We use [Google Cloud Storage](https://cloud.google.com/storage/) for persistent file uploads.
 
 ## Prerequisites
@@ -404,7 +403,6 @@ Once the pods have restarted, the `redmine` and `mariadb` services pick them up 
 ## Cleanup
 
 To delete your application completely:
-
 
 *If you intend to teardown the entire cluster then jump to Step 4.*
 
