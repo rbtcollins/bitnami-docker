@@ -52,7 +52,7 @@ We'll be using these files to deploy and configure Redmine :
 
 The Redmine image is built using the `Dockerfile` and `run.sh` script. Docker container images can extend from other existing images so for this image, we'll extend from the existing `bitnami/ruby` image.
 
-The `Dockerfile` imports the correct Redmine and Redmine S3 plug-in source code and a `run.sh` script. 
+The `Dockerfile` imports the correct Redmine and Redmine S3 plug-in source code and a `run.sh` script.
 
 The `run.sh` script automates links the MariaDB service and sets up the Redmine database connection parameters. It also configures Google Cloud Storage and performs database migration tasks before starting up the Redmine application server.
 
@@ -109,7 +109,7 @@ We will use the `mariadb-disk` in the MariaDB pod definition in the next step.
 
 The first thing that we're going to do is start a [pod](https://github.com/GoogleCloudPlatform/kubernetes/blob/master/docs/user-guide/pods.md) for MariaDB. We'll use a [replication controller](https://github.com/GoogleCloudPlatform/kubernetes/blob/master/docs/user-guide/replication-controller.md) to create the pod—even though it's a single pod, the controller is still useful for monitoring health and restarting the pod if required.
 
-We'll use the config file `mariadb-controller.yml` for the database pod. The pod containers a single container. 
+We'll use the config file `mariadb-controller.yml` for the database pod. The pod containers a single container.
 
 > **Note**": You should change the value of the `MARIADB_PASSWORD` env variable to one of your choosing.
 
