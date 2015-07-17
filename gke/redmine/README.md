@@ -35,7 +35,7 @@ Set up your Google Container Engine environment using [these instructions](https
 
 ### Download the configuration files
 
-Clone the bitnami-docker GitHub repository:
+Clone the [bitnami-docker](https://github.com/bitnami/bitnami-docker) GitHub repository:
 
 ```bash
 git clone https://github.com/bitnami/bitnami-docker.git
