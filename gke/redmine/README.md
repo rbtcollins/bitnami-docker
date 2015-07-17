@@ -35,9 +35,13 @@ Set up your Google Container Engine environment using [these instructions](https
 
 ### Download the configuration files
 
-!SPB Move these to a GitHub repo and pull them. Perhaps the bitnami-docker repo?!
+Clone the bitnami-docker GitHub repository:
 
-We'll be using these files to deploy and configure Redmine :
+```bash
+git clone https://github.com/bitnami/bitnami-docker.git
+```
+
+The files used in this tutorial can be found in the `gke/redmine` directory of the cloned repository:
 
   - Dockerfile
   - run.sh
