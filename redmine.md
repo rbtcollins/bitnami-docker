@@ -93,7 +93,7 @@ Now that your cluster is up and running, everything is set to launch the Redmine
 
 ### Create persistent disk
 
-We will make use of [persistent disks](https://cloud.google.com/compute/docs/disks/) for MariaDB, allowing the database server to preserve its state across pod shutdown and startup.
+We will make use of [persistent disks](https://github.com/GoogleCloudPlatform/kubernetes/blob/master/docs/user-guide/persistent-volumes.md) for MariaDB, allowing the database server to preserve its state across pod shutdown and startup.
 
 ```bash
 $ gcloud compute disks create --size 200GB mariadb-disk
