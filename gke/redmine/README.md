@@ -108,7 +108,7 @@ We will use the `mariadb-disk` in the MariaDB pod definition in the next step.
 
 The first thing that we're going to do is start a [pod](https://github.com/GoogleCloudPlatform/kubernetes/blob/master/docs/user-guide/pods.md) for MariaDB. We'll use a [replication controller](https://github.com/GoogleCloudPlatform/kubernetes/blob/master/docs/user-guide/replication-controller.md) to create the pod—even though it's a single pod, the controller is still useful for monitoring health and restarting the pod if required.
 
-We'll use the config file `mariadb-controller.yml` for the database pod. The pod containers a single container.
+We'll use the config file `mariadb-controller.yml` for the database pod. The pod definition creates a single MariaDB pod.
 
 > **Note**": You should change the value of the `MARIADB_PASSWORD` env variable to one of your choosing.
 
@@ -174,13 +174,13 @@ To create a bucket and developer key:
 
   ![Create Developer Key](images/create-developer-key.png)
 
-Make a note of the generated **Access Key** and **Secret** as we will use in the Redmine pod definition in the next step.
+Make a note of the generated **Access Key** and **Secret** as we will use them in the Redmine pod definition in the next step.
 
 ### Redmine secret store
 
-A [secret key store](https://github.com/GoogleCloudPlatform/kubernetes/blob/master/docs/design/secrets.md) is intended to hold sensitive information such as passwords, access keys, etc. Having this information in a secret key store is safer and more flexible then putting in to our pod definition.
+A [secret key store](https://github.com/GoogleCloudPlatform/kubernetes/blob/master/docs/design/secrets.md) is intended to hold sensitive information such as passwords, access keys, etc. Having this information in a key store is safer and more flexible then putting it in to our pod definition.
 
-We will create a resource to store the sensitive configuration parameters of our Redmine container. This includes, but is not limited to the database password, session token, cloud storage access key id and secret.
+We will create a key store to save the sensitive configuration parameters of our Redmine container. This includes, but is not limited to the database password, session token, cloud storage access key id and secret.
 
 Lets begin by encoding our secret data in base64, starting with the database password.
 
@@ -242,7 +242,7 @@ NAME              TYPE      DATA
 redmine-secrets   Opaque    4
 ```
 
-This secret key store will be mounted at `/etc/redmine-secrets` as read-only in the Redmine pods.
+This secret key store will be mounted at `/etc/redmine-secrets` in read-only mode in the Redmine pods.
 
 ### Redmine pod
 
@@ -258,7 +258,7 @@ It specifies 3 replicas of the server. Using this file, you can start your Redmi
 $ kubectl create -f redmine-controller.yml
 ```
 
-Check to see if the pod is running. It may take a few minutes to change from `Pending` to `Running`:
+Check to see if the pods are running. It may take a few minutes to change from `Pending` to `Running`:
 
 ```bash
 $ kubectl get pods -l name=redmine
@@ -283,7 +283,7 @@ You'll see a single MariaDB pod and three Redmine pods. In [Scaling the Redmine 
 
 ### Redmine service
 
-As with the other pods, we want a service to group the Redmine server pods. However, this time it's different: this service is user-facing, so we want it to be externally visible. That is, we want a client to be able to request the service from outside the cluster. To accomplish this, we can set the `type: LoadBalancer` field in the service configuration.
+As with the MariaDB pod, we want a service to group the Redmine server pods. However, this time it's different: this service is user-facing, so we want it to be externally visible. That is, we want a client to be able to request the service from outside the cluster. To accomplish this, we can set the `type: LoadBalancer` field in the service configuration.
 
 The service specification for the Redmine is in `redmine-service.yml`.
 Start up the service:
@@ -329,11 +329,11 @@ NAME    NETWORK SRC_RANGES RULES  SRC_TAGS TARGET_TAGS
 redmine default 0.0.0.0/0  tcp:80          gke-redmine-08042373-node
 ```
 
-You can alternatively open up port 80 from the [Developers Console](https://console.developers.google.com/).
+Alternatively, you can open up port 80 from the [Developers Console](https://console.developers.google.com/).
 
 ## Access your Redmine server
 
-Now that the firewall is open, you can access the service. Find the external IP of the service you just set up:
+Now that the firewall is open, you can access the service. Find the external IP of the Redmine service you just set up:
 
 ```bash
 $ kubectl describe services redmine
