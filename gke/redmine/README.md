@@ -23,7 +23,9 @@
 
 This tutorial walks through setting up a scalable [Redmine](http://redmine.org) installation on Google Container Engine using the Bitnami Container Images for Docker. If you're just looking for the quickest way to get Redmine up and running you might prefer our [prebuilt installers, VMs and Cloud Images](http://www.bitnami.com/stack/redmine). If you're interested in getting hands on with [Kubernetes](http://kubernetes.io) and [Google Container Engine](https://cloud.google.com/container-engine/), read on....
 
-!SPB Quick architecture diagram here!
+The following illustration provides a quick overview of the architecture.
+
+![Redmine](images/architecture.png)
 
 We'll be creating a scalable Redmine installation backed by an instance of MariaDB. We also configure load balancing, an external IP, a secret store and health checks. We use [Google Cloud Storage](https://cloud.google.com/storage/) for persistent file uploads.
 
