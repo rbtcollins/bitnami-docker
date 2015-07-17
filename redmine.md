@@ -54,7 +54,7 @@ The Redmine image is built using the `Dockerfile` and `run.sh` script. Docker co
 
 The `Dockerfile` imports the correct Redmine and Redmine S3 plug-in source code and a `run.sh` script.
 
-The `run.sh` script automates links the MariaDB service and sets up the Redmine database connection parameters. It also configures Google Cloud Storage and performs database migration tasks before starting up the Redmine application server.
+The `run.sh` script uses the MariaDB connection information exposed by docker links and automatically configures the Redmine database connection parameters. It also configures Google Cloud Storage and performs database migration tasks before starting up the Redmine application server.
 
 Build the Redmine image by running:
 
