@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: mariadb
-          image: bitnami/mariadb:5.5.44-0-r01
+          image: bitnami/mariadb:5.5.44-0-r02
           args:
             - --max_connect_errors=1000
           env:
