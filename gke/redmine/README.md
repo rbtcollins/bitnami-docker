@@ -99,7 +99,7 @@ Now that your cluster is up and running, everything is set to launch the Redmine
 
 ### Create persistent disk
 
-We will make use of [persistent disks](https://github.com/GoogleCloudPlatform/kubernetes/blob/master/docs/user-guide/persistent-volumes.md) for MariaDB, allowing the database server to preserve its state across pod shutdown and startup.
+We will make use of [volumes](http://kubernetes.io/v1.0/docs/user-guide/volumes.html) for MariaDB, allowing the database server to preserve its state across pod shutdown and startup.
 
 ```bash
 $ gcloud compute disks create --size 200GB mariadb-disk
@@ -112,7 +112,7 @@ We will use the `mariadb-disk` in the MariaDB pod definition in the next step.
 
 ### MariaDB pod
 
-The first thing that we're going to do is start a [pod](https://github.com/GoogleCloudPlatform/kubernetes/blob/master/docs/user-guide/pods.md) for MariaDB. We'll use a [replication controller](https://github.com/GoogleCloudPlatform/kubernetes/blob/master/docs/user-guide/replication-controller.md) to create the pod—even though it's a single pod, the controller is still useful for monitoring health and restarting the pod if required.
+The first thing that we're going to do is start a [pod](http://kubernetes.io/v1.0/docs/user-guide/pods.html) for MariaDB. We'll use a [replication controller](http://kubernetes.io/v1.0/docs/user-guide/replication-controller.html) to create the pod—even though it's a single pod, the controller is still useful for monitoring health and restarting the pod if required.
 
 We'll use the config file `mariadb-controller.yml` for the database pod. The pod definition creates a single MariaDB pod.
 
@@ -134,7 +134,7 @@ mariadb-mmae9   1/1       Running   0          31s
 
 ### MariaDB service
 
-A [service](https://github.com/GoogleCloudPlatform/kubernetes/blob/master/docs/user-guide/services.md) is an abstraction which defines a logical set of pods and a policy by which to access them. It is effectively a named load balancer that proxies traffic to one or more pods.
+A [service](http://kubernetes.io/v1.0/docs/user-guide/services.html) is an abstraction which defines a logical set of pods and a policy by which to access them. It is effectively a named load balancer that proxies traffic to one or more pods.
 
 When you set up a service, you tell it the pods to proxy based on pod labels. Note that the pod that you created in step one has the label `name=mariadb`.
 
@@ -188,7 +188,7 @@ Make a note of the generated **Access Key** and **Secret** as we will use them i
 
 ### Redmine secret store
 
-A [secret key store](https://github.com/GoogleCloudPlatform/kubernetes/blob/master/docs/design/secrets.md) is intended to hold sensitive information such as passwords, access keys, etc. Having this information in a key store is safer and more flexible then putting it in to our pod definition.
+A [secret key store](http://kubernetes.io/v1.0/docs/user-guide/secrets.html) is intended to hold sensitive information such as passwords, access keys, etc. Having this information in a key store is safer and more flexible then putting it in to our pod definition.
 
 We will create a key store to save the sensitive configuration parameters of our Redmine container. This includes, but is not limited to the database password, session token, cloud storage access key id and secret.
 
