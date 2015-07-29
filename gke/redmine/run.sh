@@ -16,18 +16,19 @@ if [[ -z ${REDMINE_SESSION_TOKEN} ]]; then
 fi
 
 # automatically fetch database parameters from bitnami/mariadb
-DATABASE_HOST=${DATABASE_HOST:-${MARIADB_PORT_3306_TCP_ADDR}}
-DATABASE_NAME=${DATABASE_NAME:-${MARIADB_ENV_MARIADB_DATABASE}}
-DATABASE_USER=${DATABASE_USER:-${MARIADB_ENV_MARIADB_USER}}
-DATABASE_PASSWORD=${DATABASE_PASSWORD:-${MARIADB_ENV_MARIADB_PASSWORD}}
+DATABASE_MASTER_HOST=${DATABASE_MASTER_HOST:-${MARIADB_MASTER_PORT_3306_TCP_ADDR}}
+DATABASE_SLAVE_HOST=${DATABASE_SLAVE_HOST:-${MARIADB_SLAVE_PORT_3306_TCP_ADDR}}
+DATABASE_NAME=${DATABASE_NAME:-${MARIADB_MASTER_ENV_MARIADB_DATABASE}}
+DATABASE_USER=${DATABASE_USER:-${MARIADB_MASTER_ENV_MARIADB_USER}}
+DATABASE_PASSWORD=${DATABASE_PASSWORD:-${MARIADB_MASTER_ENV_MARIADB_PASSWORD}}
 
 # lookup DATABASE_PASSWORD configuration in secrets volume
 if [[ -z ${DATABASE_PASSWORD} && -f /etc/redmine-secrets/database-password ]]; then
   DATABASE_PASSWORD=$(cat /etc/redmine-secrets/database-password)
 fi
 
-if [[ -z ${DATABASE_HOST} || -z ${DATABASE_NAME} || \
-      -z ${DATABASE_USER} || -z ${DATABASE_PASSWORD} ]]; then
+if [[ -z ${DATABASE_MASTER_HOST} || -z ${DATABASE_SLAVE_HOST} || \
+      -z ${DATABASE_NAME} || -z ${DATABASE_USER} || -z ${DATABASE_PASSWORD} ]]; then
   echo "ERROR: "
   echo "  Please configure the database connection."
   echo "  Cannot continue without a database. Aborting..."
@@ -61,12 +62,21 @@ fi
 # configure redmine database connection settings
 cat > config/database.yml <<EOF
 production:
-  adapter: mysql2
+  adapter: 'mysql2_makara'
   database: ${DATABASE_NAME}
-  host: ${DATABASE_HOST}
   username: ${DATABASE_USER}
   password: "${DATABASE_PASSWORD}"
   encoding: utf8
+
+  blacklist_duration: 5
+  master_ttl: 5
+  sticky: true
+  makara:
+    connections:
+      - role: master
+        host: ${DATABASE_MASTER_HOST}
+      - role: slave
+        host: ${DATABASE_SLAVE_HOST}
 EOF
 
 # configure cloud storage settings

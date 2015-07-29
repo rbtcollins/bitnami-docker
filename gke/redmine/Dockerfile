@@ -10,6 +10,9 @@ RUN curl -L http://www.redmine.org/releases/redmine-${REDMINE_VERSION}.tar.gz \
  && mkdir -p /home/$BITNAMI_APP_USER/redmine/plugins/redmine_s3 \
  && tar -xf /tmp/redmine_s3.tar.gz --strip=1 -C /home/$BITNAMI_APP_USER/redmine/plugins/redmine_s3 \
  && cd /home/$BITNAMI_APP_USER/redmine \
+ && sed '/if File.exist?(database_file)/,/^end/d' -i Gemfile \
+ && echo "gem 'mysql2', '~> 0.3.11'" >> Gemfile.local \
+ && echo "gem 'makara', github: 'taskrabbit/makara', tag: 'v0.3.3'" >> Gemfile.local \
  && cp -a config/database.yml.example config/database.yml \
  && cp -a plugins/redmine_s3/config/s3.yml.example config/s3.yml \
  && bundle install --without development test \
