@@ -452,9 +452,7 @@ You can scale down in the same manner.
 Because we used a persistent disk for the MariaDB master pod and Google cloud storage for files uploaded in Redmine, your Redmine state is preserved even when the pods it's running on are deleted. Lets try it.
 
 ```bash
-$ kubectl delete rc redmine
-$ kubectl delete rc mariadb-slave
-$ kubectl delete rc mariadb-master
+$ kubectl delete rc redmine mariadb-slave mariadb-master
 ```
 
 *Deleting the replication controller also deletes its pods.*
@@ -473,6 +471,8 @@ $ kubectl create -f mariadb-slave-controller.yml
 $ kubectl create -f redmine-controller.yml
 ```
 
+*Please allow the pods to enter the `Running` state before creating the next controller.*
+
 Once the pods have restarted, the `redmine`, `mariadb-master` and `mariadb-slave` services pick them up immediately based on their labels, and your Redmine application is restored.
 
 ## Cleanup
@@ -484,17 +484,13 @@ To delete your application completely:
   1. Delete the controllers:
 
   ```bash
-  $ kubectl delete rc redmine
-  $ kubectl delete rc mariadb-slave
-  $ kubectl delete rc mariadb-master
+  $ kubectl delete rc redmine mariadb-slave mariadb-master
   ```
 
   2. Delete the services:
 
   ```bash
-  $ kubectl delete service redmine
-  $ kubectl delete service mariadb-slave
-  $ kubectl delete service mariadb-master
+  $ kubectl delete service redmine mariadb-slave mariadb-master
   ```
 
   3. Delete the secret key store
