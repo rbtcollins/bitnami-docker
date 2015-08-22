@@ -142,3 +142,46 @@ After performing the above firewall configurations the firewall rules will look 
 ![gateway_firewall_list](images/22_gateway_firewall_list.jpg)
 
 With this configuration, you should now be able to login to the **ks-master** VM using an SSH client.
+
+#### Setting up the master node
+
+Begin by updating the system packages.
+
+```bash
+apt-get update && apt-get -y upgrade
+```
+
+*It recommended that you reboot the VM after updating the system*
+
+Next we install Docker, followed by the Kubernetes `kubectl` command.
+
+```bash
+curl -sSL https://get.docker.com/ | sh
+```
+
+Set `K8S_VERSION` to the most recent Kubernetes release
+
+```bash
+export K8S_VERSION=1.0.3
+```
+
+Install the `kubectl` command.
+
+```bash
+wget https://github.com/kubernetes/kubernetes/releases/download/v${K8S_VERSION}/kubernetes.tar.gz
+tar xf kubernetes.tar.gz
+cp kubernetes/platforms/linux/$(dpkg --print-architecture)/kubectl /usr/local/bin
+chmod +x /usr/local/bin/kubectl
+```
+
+Finally we setup the VM to be the master node of the Kubernetes cluster.
+
+```bash
+wget https://raw.githubusercontent.com/kubernetes/kubernetes/master/docs/getting-started-guides/docker-multinode/master.sh
+chmod +x master.sh
+./master.sh
+```
+
+This process will take a while to complete at the end of which we should have a working Kubernetes master node.
+
+While the node is being setup, you can go ahead and setup one or more worker nodes.
