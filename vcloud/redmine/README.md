@@ -24,8 +24,27 @@ The files used in this tutorial can be found in the `vcloud/redmine` directory o
   - mariadb-controller.yml
   - mariadb-service.yml
 
+## Create a Docker container image
 
-## Setting up a Kubernetes cluster on vCloud Air
+The Redmine image is built using the `Dockerfile` and `run.sh` script. Docker container images can extend from other existing images so for this image, we'll extend from the existing `bitnami/ruby` image.
+
+The `Dockerfile` imports the correct Redmine source code and a `run.sh` script.
+
+The `run.sh` script uses the MariaDB connection information exposed by docker links and automatically configures the Redmine database connection parameters.
+
+Build the Redmine image by running:
+
+```bash
+$ docker build -t <dockerhub-account-name>/redmine .
+```
+
+Then push this image to the Docker Hub Registry:
+
+```bash
+$ docker push <dockerhub-account-name>/redmine
+```
+
+## Create your Kubernetes cluster on vCloud Air
 
 In this section we will talk through setting up a Kubernetes cluster on vCloud Air.
 
@@ -317,3 +336,4 @@ kube-dns   k8s-app=kube-dns,kubernetes.io/cluster-service=true,kubernetes.io/nam
 ```
 
 And there you have it, we have a Kubernetes cluster setup on vCloud Air. You can run further tests on your cluster using these instructions: https://github.com/kubernetes/kubernetes/blob/master/docs/getting-started-guides/docker-multinode/testing.md
+
