@@ -5,7 +5,7 @@
     - [Download the configuration files](#download-the-configuration-files)
 - [Create a Docker container image](#create-a-docker-container-image)
 - [Create your cluster](#create-your-cluster)
-- [Create your Kubernetes cluster on vCloud Air](#create-your-kubernetes-cluster-on-vcloud-air)
+- [Create your cluster](#create-your-kubernetes-cluster-on-vcloud-air)
     - [Network Configuration](#network-configuration)
     - [Kubernetes master](#kubernetes-master)
         - [Create `k8s-master` VM](#create-k8s-master-vm)
@@ -68,7 +68,7 @@ Then push this image to the Docker Hub Registry:
 $ docker push <dockerhub-account-name>/redmine
 ```
 
-## Create your Kubernetes cluster on vCloud Air
+## Create your cluster
 
 In this section we will talk through setting up a Kubernetes cluster on vCloud Air.
 
