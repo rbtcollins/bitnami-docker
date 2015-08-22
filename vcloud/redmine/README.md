@@ -456,3 +456,7 @@ Login to the vCloud Air interface and update the **Gateway > NAT Rules** configu
 Next, go to the **Gateway > Firewall Rules** configuration page and add the **inbound-HTTP** rule as shown in the screenshot below:
 
 ![gateway_firewall_add-inbound-HTTP](images/25_gateway_firewall_add-inbound-HTTP.jpg)
+
+## Access your Redmine server
+
+Now that the firewall is open, you can access the service using the public IP address of your gateway. Visit `http://x.x.x.x` where `x.x.x.x` is the public IP address of the gateway from the [Network Configuration](#network-configuration) section.
