@@ -384,3 +384,63 @@ $ kubectl get services mariadb
 NAME      LABELS         SELECTOR       IP(S)        PORT(S)
 mariadb   name=mariadb   name=mariadb   10.0.0.143   3306/TCP
 ```
+
+## Redmine pod and service
+
+Now that you have the database up and running, lets set up the Redmine web servers.
+
+### Redmine pod
+
+The controller and its pod template is described in the file `redmine-controller.yml`.
+
+> **Note**:
+> 1. Change the image name to `<dockerhub-account-name>/redmine` as per the build instructions in [Create a Docker container image](#create-a-docker-container-image).
+> 2. Update the values of `REDMINE_SESSION_TOKEN` and `DATABASE_PASSWORD`.
+
+It specifies 3 replicas of the server. Using this file, you can start your Redmine servers with:
+
+```bash
+$ kubectl create -f redmine-controller.yml
+```
+
+Check to see if the pods are running. It may take a few minutes to change from `Pending` to `Running`:
+
+```bash
+$ kubectl get pods -l name=redmine
+NAME            READY     STATUS    RESTARTS   AGE
+redmine-8qqfv   1/1       Running   0          5m
+redmine-tc4oi   1/1       Running   0          5m
+redmine-xj3mh   1/1       Running   0          5m
+```
+
+Once the servers are up, you can list the pods in the cluster, to verify that they're all running:
+
+```bash
+$ kubectl get pods
+NAME                   READY     STATUS    RESTARTS   AGE
+k8s-master-127.0.0.1   3/3       Running   0          1d
+mariadb-izq2p          1/1       Running   0          32m
+redmine-8qqfv          1/1       Running   0          6m
+redmine-tc4oi          1/1       Running   0          6m
+redmine-xj3mh          1/1       Running   0          6m
+```
+
+You'll see a single MariaDB pod and three Redmine pods and some infrastructure pods. In [Scaling the Redmine application](#scaling-the-redmine-application) we will see how we can scale the Redmine pods.
+
+### Redmine service
+
+As with the MariaDB pod, we want a service to group the Redmine server pods. However, this time it's different: this service is user-facing, so we want it to be externally visible. That is, we want a client to be able to request the service from outside the cluster. To accomplish this, we can set the `type: NodePort` field and specify `nodePort: 30000` in the service configuration.
+
+The service specification for the Redmine is in `redmine-service.yml`.
+
+```bash
+$ kubectl create -f redmine-service.yml
+```
+
+See it running:
+
+```bash
+$ kubectl get services redmine
+NAME      LABELS         SELECTOR       IP(S)        PORT(S)
+redmine   name=redmine   name=redmine   10.0.0.226   80/TCP
+```
