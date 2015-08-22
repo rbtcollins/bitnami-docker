@@ -444,3 +444,15 @@ $ kubectl get services redmine
 NAME      LABELS         SELECTOR       IP(S)        PORT(S)
 redmine   name=redmine   name=redmine   10.0.0.226   80/TCP
 ```
+
+## Allow external traffic
+
+By default, the pod is only accessible by its internal IP within the cluster. In order to make the Redmine service accessible from the Internet we have to open port 80 and forward it to port `30000` (`nodePort`) of our master node.
+
+Login to the vCloud Air interface and update the **Gateway > NAT Rules** configuration as showing in the screenshot below.
+
+![gateway_nat_add_DNAT_HTTP](images/24_gateway_nat_add_DNAT_HTTP.jpg)
+
+Next, go to the **Gateway > Firewall Rules** configuration page and add the **inbound-HTTP** rule as shown in the screenshot below:
+
+![gateway_firewall_add-inbound-HTTP](images/25_gateway_firewall_add-inbound-HTTP.jpg)
