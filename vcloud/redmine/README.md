@@ -361,6 +361,8 @@ kube-dns   k8s-app=kube-dns,kubernetes.io/cluster-service=true,kubernetes.io/nam
 
 And there you have it, we have a Kubernetes cluster setup on vCloud Air. You can run further tests on your cluster using these instructions: https://github.com/kubernetes/kubernetes/blob/master/docs/getting-started-guides/docker-multinode/testing.md
 
+From this point, all commands will be executed in the master nodes console. If you wish to execute the commands in the worker nodes shell add the `-s "$KUBE_SERVER:8080"` argument to the kubectl commands.
+
 ## MariaDB pod and service
 
 ### MariaDB pod
