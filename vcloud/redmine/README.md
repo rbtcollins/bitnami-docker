@@ -29,7 +29,7 @@
 
 ### VMware vCloud Air
 
-Signup for a [VMware vCloud Air](https://signupvcloud.vmware.com/1094/purl-signup).
+Signup for a [VMware vCloud Air](https://signupvcloud.vmware.com/1094/purl-signup) account. You will get $300 or 3 months (whichever comes first) in vCloud Air OnDemand service credits upon signup.
 
 ### Download the configuration files
 
