@@ -481,3 +481,27 @@ redmine-xj3mh   1/1       Running   0          1h
 ```
 
 You can scale down the number of Redmine pods in the same manner.
+
+## Cleanup
+
+To delete your application completely:
+
+*If you intend to teardown the entire cluster then jump to Step 3.*
+
+  1. Delete the services:
+
+  ```bash
+  $ kubectl delete service redmine
+  $ kubectl delete service mariadb
+  ```
+
+  2. Delete the controller:
+
+  ```bash
+  $ kubectl delete rc redmine
+  $ kubectl delete rc mariadb
+  ```
+
+  3. Delete the VM's of the cluster:
+
+  Login to vCloud Air and power-off and delete the VM's that are part of your cluster.
