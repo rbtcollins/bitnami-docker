@@ -148,7 +148,7 @@ With this configuration, you should now be able to login to the **ks-master** VM
 Begin by updating the system packages.
 
 ```bash
-apt-get update && apt-get -y upgrade
+$ apt-get update && apt-get -y upgrade
 ```
 
 *It recommended that you reboot the VM after updating the system*
@@ -156,30 +156,30 @@ apt-get update && apt-get -y upgrade
 Next we install Docker, followed by the Kubernetes `kubectl` command.
 
 ```bash
-curl -sSL https://get.docker.com/ | sh
+$ curl -sSL https://get.docker.com/ | sh
 ```
 
 Set `K8S_VERSION` to the most recent Kubernetes release
 
 ```bash
-export K8S_VERSION=1.0.3
+$ export K8S_VERSION=1.0.3
 ```
 
 Install the `kubectl` command.
 
 ```bash
-wget https://github.com/kubernetes/kubernetes/releases/download/v${K8S_VERSION}/kubernetes.tar.gz
-tar xf kubernetes.tar.gz
-cp kubernetes/platforms/linux/$(dpkg --print-architecture)/kubectl /usr/local/bin
-chmod +x /usr/local/bin/kubectl
+$ wget https://github.com/kubernetes/kubernetes/releases/download/v${K8S_VERSION}/kubernetes.tar.gz
+$ tar xf kubernetes.tar.gz
+$ cp kubernetes/platforms/linux/$(dpkg --print-architecture)/kubectl /usr/local/bin
+$ chmod +x /usr/local/bin/kubectl
 ```
 
 Finally we setup the VM to be the master node of the Kubernetes cluster.
 
 ```bash
-wget https://raw.githubusercontent.com/kubernetes/kubernetes/master/docs/getting-started-guides/docker-multinode/master.sh
-chmod +x master.sh
-./master.sh
+$ wget https://raw.githubusercontent.com/kubernetes/kubernetes/master/docs/getting-started-guides/docker-multinode/master.sh
+$ chmod +x master.sh
+$ ./master.sh
 ```
 
 This process will take a while to complete at the end of which we should have a working Kubernetes master node.
@@ -203,7 +203,7 @@ A VM named **ks8-worker-01** should now be listed under the **Virtual Machines**
 Login to the worker node and begin by updating the system packages.
 
 ```bash
-apt-get update && apt-get -y upgrade
+$ apt-get update && apt-get -y upgrade
 ```
 
 *It recommended that you reboot the VM after updating the system*
@@ -211,36 +211,36 @@ apt-get update && apt-get -y upgrade
 Next we install Docker, followed by the Kubernetes `kubectl` command.
 
 ```bash
-curl -sSL https://get.docker.com/ | sh
+$ curl -sSL https://get.docker.com/ | sh
 ```
 
 Set `K8S_VERSION` to the most recent Kubernetes release
 
 ```bash
-export K8S_VERSION=1.0.3
+$ export K8S_VERSION=1.0.3
 ```
 
 Install the `kubectl` command.
 
 ```bash
-wget https://github.com/kubernetes/kubernetes/releases/download/v${K8S_VERSION}/kubernetes.tar.gz
-tar xf kubernetes.tar.gz
-cp kubernetes/platforms/linux/$(dpkg --print-architecture)/kubectl /usr/local/bin
-chmod +x /usr/local/bin/kubectl
+$ wget https://github.com/kubernetes/kubernetes/releases/download/v${K8S_VERSION}/kubernetes.tar.gz
+$ tar xf kubernetes.tar.gz
+$ cp kubernetes/platforms/linux/$(dpkg --print-architecture)/kubectl /usr/local/bin
+$ chmod +x /usr/local/bin/kubectl
 ```
 
 Finally we setup the VM as a worker node of the Kubernetes cluster. First set the `MASTER_IP` environment variable to the IP address of the **ks8-master** VM.
 
 ```bash
-export MASTER_IP=192.168.109.2
+$ export MASTER_IP=192.168.109.2
 ```
 
 And begin the install.
 
 ```bash
-wget https://raw.githubusercontent.com/kubernetes/kubernetes/master/docs/getting-started-guides/docker-multinode/worker.sh
-chmod +x worker.sh
-./worker.sh
+$ wget https://raw.githubusercontent.com/kubernetes/kubernetes/master/docs/getting-started-guides/docker-multinode/worker.sh
+$ chmod +x worker.sh
+$ ./worker.sh
 ```
 
 Like the master node setup, the this process will take a while to complete at the end of which the worker should be ready.
@@ -254,36 +254,36 @@ To complete the setup of our Kubernetes cluster we need to deploy a DNS. These i
 First, download the configuration templates.
 
 ```bash
-wget https://raw.githubusercontent.com/kubernetes/kubernetes/master/docs/getting-started-guides/docker-multinode/skydns-rc.yaml.in
-wget https://raw.githubusercontent.com/kubernetes/kubernetes/master/docs/getting-started-guides/docker-multinode/skydns-svc.yaml.in
+$ wget https://raw.githubusercontent.com/kubernetes/kubernetes/master/docs/getting-started-guides/docker-multinode/skydns-rc.yaml.in
+$ wget https://raw.githubusercontent.com/kubernetes/kubernetes/master/docs/getting-started-guides/docker-multinode/skydns-svc.yaml.in
 ```
 
 Next, we need to configure some environment variables, namely `DNS_REPLICAS` , `DNS_DOMAIN` , `DNS_SERVER_IP` , `KUBE_SERVER`. Set the `KUBE_SERVER` variable to the IP address of the **k8s-master** VM.
 
 ```bash
-export DNS_REPLICAS=1
-export DNS_DOMAIN=cluster.local
-export DNS_SERVER_IP=10.0.0.10
-export KUBE_SERVER=192.168.109.2
+$ export DNS_REPLICAS=1
+$ export DNS_DOMAIN=cluster.local
+$ export DNS_SERVER_IP=10.0.0.10
+$ export KUBE_SERVER=192.168.109.2
 ```
 
 Next we generate the configuration using the templates and the above configuration.
 
 ```bash
-sed -e "s/{{ pillar\['dns_replicas'\] }}/${DNS_REPLICAS}/g;s/{{ pillar\['dns_domain'\] }}/${DNS_DOMAIN}/g;s/{kube_server_url}/${KUBE_SERVER}/g;" skydns-rc.yaml.in > ./skydns-rc.yaml
-sed -e "s/{{ pillar\['dns_server'\] }}/${DNS_SERVER_IP}/g" skydns-svc.yaml.in > ./skydns-svc.yaml
+$ sed -e "s/{{ pillar\['dns_replicas'\] }}/${DNS_REPLICAS}/g;s/{{ pillar\['dns_domain'\] }}/${DNS_DOMAIN}/g;s/{kube_server_url}/${KUBE_SERVER}/g;" skydns-rc.yaml.in > ./skydns-rc.yaml
+$ sed -e "s/{{ pillar\['dns_server'\] }}/${DNS_SERVER_IP}/g" skydns-svc.yaml.in > ./skydns-svc.yaml
 ```
 
 Now use `kubectl` to create the `skydns` replication controller.
 
 ```bash
-kubectl -s "$KUBE_SERVER:8080" --namespace=kube-system create -f ./skydns-rc.yaml
+$ kubectl -s "$KUBE_SERVER:8080" --namespace=kube-system create -f ./skydns-rc.yaml
 ```
 
 Wait for the pods to enter the `Running` state.
 
 ```bash
-kubectl -s "$KUBE_SERVER:8080" --namespace=kube-system get pods
+$ kubectl -s "$KUBE_SERVER:8080" --namespace=kube-system get pods
 NAME                READY     STATUS    RESTARTS   AGE
 kube-dns-v8-rh7lz   4/4       Running   0          2m
 ```
@@ -291,5 +291,5 @@ kube-dns-v8-rh7lz   4/4       Running   0          2m
 Once the pods are in the `Running` state, create the `skydns` service using `kubectl`.
 
 ```bash
-kubectl -s "$KUBE_SERVER:8080" --namespace=kube-system create -f ./skydns-svc.yaml
+$ kubectl -s "$KUBE_SERVER:8080" --namespace=kube-system create -f ./skydns-svc.yaml
 ```
