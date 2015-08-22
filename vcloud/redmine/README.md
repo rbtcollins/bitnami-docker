@@ -1,25 +1,25 @@
 # Scalable Redmine Using Bitnami Containers, Kubernetes and VMware vCloud Air
 
 - [Prerequisites](#prerequisites)
-  - [VMware vCloud Air](#vmware-vcloud-air)
-  - [Download the configuration files](#download-the-configuration-files)
+    - [VMware vCloud Air](#vmware-vcloud-air)
+    - [Download the configuration files](#download-the-configuration-files)
 - [Create a Docker container image](#create-a-docker-container-image)
 - [Create your cluster](#create-your-cluster)
 - [Create your Kubernetes cluster on vCloud Air](#create-your-kubernetes-cluster-on-vcloud-air)
-  - [Network Configuration](#network-configuration)
-  - [Kubernetes master](#kubernetes-master)
-    - [Create `k8s-master` VM](#create-k8s-master-vm)
-    - [Allow remote SSH connections (Optional)](#allow-remote-ssh-connections-optional)
-    - [Setting up the master node](#setting-up-the-master-node)
-  - [Kubernetes Worker](#kubernetes-worker)
-    - [Create `k8s-worker-01` VM](#create-k8s-worker-01-vm)
-    - [Setting up the worker node](#setting-up-the-worker-node)
+    - [Network Configuration](#network-configuration)
+    - [Kubernetes master](#kubernetes-master)
+        - [Create `k8s-master` VM](#create-k8s-master-vm)
+        - [Allow remote SSH connections (Optional)](#allow-remote-ssh-connections-optional)
+        - [Setting up the master node](#setting-up-the-master-node)
+    - [Kubernetes Worker](#kubernetes-worker)
+        - [Create `k8s-worker-01` VM](#create-k8s-worker-01-vm)
+        - [Setting up the worker node](#setting-up-the-worker-node)
 - [MariaDB pod and service](#mariadb-pod-and-service)
-  - [MariaDB pod](#mariadb-pod)
-  - [MariaDB service](#mariadb-service)
+    - [MariaDB pod](#mariadb-pod)
+    - [MariaDB service](#mariadb-service)
 - [Redmine pod and service](#redmine-pod-and-service)
-  - [Redmine pod](#redmine-pod)
-  - [Redmine service](#redmine-service)
+    - [Redmine pod](#redmine-pod)
+    - [Redmine service](#redmine-service)
 - [Allow external traffic](#allow-external-traffic)
 - [Access your Redmine server](#access-your-redmine-server)
 - [Scaling the Redmine application](#scaling-the-redmine-application)
@@ -41,12 +41,12 @@ git clone https://github.com/bitnami/bitnami-docker.git
 
 The files used in this tutorial can be found in the `vcloud/redmine` directory of the cloned repository:
 
-  - Dockerfile
-  - run.sh
-  - redmine-controller.yml
-  - redmine-service.yml
-  - mariadb-controller.yml
-  - mariadb-service.yml
+- Dockerfile
+- run.sh
+- redmine-controller.yml
+- redmine-service.yml
+- mariadb-controller.yml
+- mariadb-service.yml
 
 ## Create a Docker container image
 
@@ -513,20 +513,20 @@ To delete your application completely:
 
 *If you intend to teardown the entire cluster then jump to Step 3.*
 
-  1. Delete the services:
+1. Delete the services:
 
-  ```bash
-  $ kubectl delete service redmine
-  $ kubectl delete service mariadb
-  ```
+    ```bash
+    $ kubectl delete service redmine
+    $ kubectl delete service mariadb
+    ```
 
-  2. Delete the controller:
+2. Delete the controller:
 
-  ```bash
-  $ kubectl delete rc redmine
-  $ kubectl delete rc mariadb
-  ```
+    ```bash
+    $ kubectl delete rc redmine
+    $ kubectl delete rc mariadb
+    ```
 
-  3. Delete the VM's of the cluster:
+3. Delete the VM's of the cluster:
 
-  Login to vCloud Air and power-off and delete the VM's that are part of your cluster.
+    Login to vCloud Air, power-off and delete the VM's that are part of your cluster.
