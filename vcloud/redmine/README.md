@@ -18,7 +18,6 @@ The files used in this tutorial can be found in the `vcloud/redmine` directory o
 
   - Dockerfile
   - run.sh
-  - redmine-secrets.yml
   - redmine-controller.yml
   - redmine-service.yml
   - mariadb-controller.yml
