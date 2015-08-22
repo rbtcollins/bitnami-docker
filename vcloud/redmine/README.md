@@ -337,3 +337,50 @@ kube-dns   k8s-app=kube-dns,kubernetes.io/cluster-service=true,kubernetes.io/nam
 
 And there you have it, we have a Kubernetes cluster setup on vCloud Air. You can run further tests on your cluster using these instructions: https://github.com/kubernetes/kubernetes/blob/master/docs/getting-started-guides/docker-multinode/testing.md
 
+## MariaDB pod and service
+
+### MariaDB pod
+
+The first thing that we're going to do is start a [pod](http://kubernetes.io/v1.0/docs/user-guide/pods.html) for MariaDB. We'll use a [replication controller](http://kubernetes.io/v1.0/docs/user-guide/replication-controller.html) to create the pod—even though it's a single pod, the controller is still useful for monitoring health and restarting the pod if required.
+
+We'll use the config file `mariadb-controller.yml` for the database pod. The pod definition creates a single MariaDB pod.
+
+> **Note**": You should change the value of the `MARIADB_PASSWORD` env variable to one of your choosing.
+
+To create the pod:
+
+```bash
+$ kubectl create -f mariadb-controller.yml
+```
+
+Check to see if the pod is running. It may take a minute to change from `Pending` to `Running`:
+
+```bash
+$ kubectl get pods -l name=mariadb
+NAME            READY     STATUS    RESTARTS   AGE
+mariadb-izq2p   1/1       Running   0          5m
+```
+
+### MariaDB service
+
+A [service](http://kubernetes.io/v1.0/docs/user-guide/services.html) is an abstraction which defines a logical set of pods and a policy by which to access them. It is effectively a named load balancer that proxies traffic to one or more pods.
+
+When you set up a service, you tell it the pods to proxy based on pod labels. Note that the pod that you created in step one has the label `name=mariadb`.
+
+We'll use the file `mariadb-service.yml` to create a service for MariaDB:
+
+The `selector` field of the service configuration determines which pods will receive the traffic sent to the service. So, the configuration is specifying that we want this service to point to pods labeled with `name=mariadb`.
+
+Start the service:
+
+```bash
+$ kubectl create -f mariadb-service.yml
+```
+
+See it running:
+
+```bash
+$ kubectl get services mariadb
+NAME      LABELS         SELECTOR       IP(S)        PORT(S)
+mariadb   name=mariadb   name=mariadb   10.0.0.143   3306/TCP
+```
