@@ -459,3 +459,25 @@ Next, go to the **Gateway > Firewall Rules** configuration page and add the **in
 ## Access your Redmine server
 
 Now that the firewall is open, you can access the service using the public IP address of your gateway. Visit `http://x.x.x.x` where `x.x.x.x` is the public IP address of the gateway from the [Network Configuration](#network-configuration) section.
+
+## Scaling the Redmine application
+
+Since the Redmine pod is defined as a service that uses a replication controller, you can easily resize the number of pods in the replication controller as follows:
+
+```bash
+$ kubectl scale --replicas=5 rc redmine
+```
+
+The configuration for the redmine controller will be updated, to specify that there should be 5 replicas running. The replication controller adjusts the number of pods it is running to match that, and you will be able to see the additional pods running:
+
+```bash
+$ kubectl get pods -l name=redmine
+NAME            READY     STATUS    RESTARTS   AGE
+redmine-8qqfv   1/1       Running   0          1h
+redmine-lrvbu   1/1       Running   0          22s
+redmine-tc4oi   1/1       Running   0          1h
+redmine-w34sq   1/1       Running   0          22s
+redmine-xj3mh   1/1       Running   0          1h
+```
+
+You can scale down the number of Redmine pods in the same manner.
