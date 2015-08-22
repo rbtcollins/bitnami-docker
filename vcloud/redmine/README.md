@@ -88,3 +88,57 @@ Under the DNS settings enter the address of the DNS server you want to use and a
 ![network_configure_dns](images/12_network_configure_dns.jpg)
 
 And we are done with the network configuration. In the following sections we will setup the Kubernetes master and worker nodes.
+
+### Kubernetes master
+
+A Kubernetes cluster consists on one master node and one or more worker nodes. In this section we will create a virtual machine for the master node.
+
+#### Create virtual machine
+
+Begin by creating a new virtual machine.
+
+![vm_create_k8s](images/13_vm_create_k8s-master.jpg)
+
+Select the **Ubuntu 12.04 Server AMD64** virtual machine template from the VMware Catalog.
+
+![vm_select_k8s](images/14_vm_select_k8s-master_image.jpg)
+
+Name the virtual machine **k8s-master** and assign the desired system resources to the VM and create the virtual machine.
+
+![vm_select_k8s](images/15_vm_select_k8s-master_resources.jpg)
+
+A VM named **ks8-master** should now be listed under the **Virtual Machines** tab and should enter the powered on state in a couple of minutes.
+
+![vm_k8s](images/16_vm_k8s-master.jpg)
+
+Select the VM to view its settings and properties.
+
+Under the **Networks** tab you will find the IP address of the virtual machine. Please note it down as it will be required later.
+
+![vm_networks](images/17_vm_networks.jpg)
+
+Under the **Settings** tab you will find the **Guest OS Password** and also a link to **Open Virtual Machine Console**. Click this link to open a console session to the VM. Upon login as `root` user, you will be required change the default password.
+
+![vm_settings](images/18_vm_settings.jpg)
+
+#### Allow remote SSH connections (Optional)
+
+Optionally we can update the network configuration to allow incoming SSH connections to our **k8s-master** VM.
+
+Add a new **DNAT** rule under the **Gateway > NAT** section as shown below. Set the **Original (External) IP** to the public IP address of the gateway and the **Translated (Internal) IP/Range** to the IP address of the VM.
+
+![gateway_nat_add_DNAT](images/19_gateway_nat_add_DNAT.jpg)
+
+After performing the above NAT configuration the NAT Rules will look something like this.
+
+![gateway_nat_list](images/20_gateway_nat_list.jpg)
+
+Next, we need to add a firewall rule to allow inbound SSH connections to the **k8s-master** VM.
+
+![gateway_firewall_add](images/21_gateway_firewall_add-inbound-SSH.jpg)
+
+After performing the above firewall configurations the firewall rules will look something like this.
+
+![gateway_firewall_list](images/22_gateway_firewall_list.jpg)
+
+With this configuration, you should now be able to login to the **ks-master** VM using an SSH client.
