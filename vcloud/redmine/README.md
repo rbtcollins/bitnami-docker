@@ -1,5 +1,30 @@
 # Scalable Redmine Using Bitnami Containers, Kubernetes and VMware vCloud Air
 
+- [Prerequisites](#prerequisites)
+  - [VMware vCloud Air](#vmware-vcloud-air)
+  - [Download the configuration files](#download-the-configuration-files)
+- [Create a Docker container image](#create-a-docker-container-image)
+- [Create your cluster](#create-your-cluster)
+- [Create your Kubernetes cluster on vCloud Air](#create-your-kubernetes-cluster-on-vcloud-air)
+  - [Network Configuration](#network-configuration)
+  - [Kubernetes master](#kubernetes-master)
+    - [Create `k8s-master` VM](#create-k8s-master-vm)
+    - [Allow remote SSH connections (Optional)](#allow-remote-ssh-connections-optional)
+    - [Setting up the master node](#setting-up-the-master-node)
+  - [Kubernetes Worker](#kubernetes-worker)
+    - [Create `k8s-worker-01` VM](#create-k8s-worker-01-vm)
+    - [Setting up the worker node](#setting-up-the-worker-node)
+- [MariaDB pod and service](#mariadb-pod-and-service)
+  - [MariaDB pod](#mariadb-pod)
+  - [MariaDB service](#mariadb-service)
+- [Redmine pod and service](#redmine-pod-and-service)
+  - [Redmine pod](#redmine-pod)
+  - [Redmine service](#redmine-service)
+- [Allow external traffic](#allow-external-traffic)
+- [Access your Redmine server](#access-your-redmine-server)
+- [Scaling the Redmine application](#scaling-the-redmine-application)
+- [Cleanup](#cleanup)
+
 ## Prerequisites
 
 ### VMware vCloud Air
@@ -111,7 +136,7 @@ And we are done with the network configuration. In the following sections we wil
 
 A Kubernetes cluster consists on one master node and one or more worker nodes. In this section we will create a virtual machine for the master node.
 
-#### Create virtual machine
+#### Create `k8s-master` VM
 
 Begin by creating a new virtual machine.
 
@@ -206,7 +231,7 @@ While the node is being setup, you can go ahead and setup one or more worker nod
 
 ### Kubernetes Worker
 
-#### Create virtual machine
+#### Create `k8s-master` VM
 
 Similar to creating a VM for the master node, we create a VM for the worker node.
 
