@@ -293,3 +293,27 @@ Once the pods are in the `Running` state, create the `skydns` service using `kub
 ```bash
 $ kubectl -s "$KUBE_SERVER:8080" --namespace=kube-system create -f ./skydns-svc.yaml
 ```
+
+Lets perform some basic checks to see if the Kubernetes cluster has been setup correctly.
+
+```bash
+$ kubectl -s "$KUBE_SERVER:8080" get nodes
+NAME        LABELS                             STATUS
+127.0.0.1   kubernetes.io/hostname=127.0.0.1   Ready
+127.0.1.1   kubernetes.io/hostname=127.0.1.1   Ready
+```
+
+```bash
+$ kubectl --namespace=kube-system get pods
+NAME                READY     STATUS    RESTARTS   AGE
+kube-dns-v8-rh7lz   4/4       Running   0          4m
+```
+
+```bash
+$ kubectl --namespace=kube-system get services
+NAME       LABELS                                                                           SELECTOR           IP(S)       PORT(S)
+kube-dns   k8s-app=kube-dns,kubernetes.io/cluster-service=true,kubernetes.io/name=KubeDNS   k8s-app=kube-dns   10.0.0.10   53/UDP
+                                                                                                                           53/TCP
+```
+
+And there you have it, we have a Kubernetes cluster setup on vCloud Air. You can run further tests on your cluster using these instructions: https://github.com/kubernetes/kubernetes/blob/master/docs/getting-started-guides/docker-multinode/testing.md
