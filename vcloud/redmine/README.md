@@ -347,13 +347,13 @@ NAME        LABELS                             STATUS
 ```
 
 ```bash
-$ kubectl --namespace=kube-system get pods
+$ kubectl -s "$KUBE_SERVER:8080" --namespace=kube-system get pods
 NAME                READY     STATUS    RESTARTS   AGE
 kube-dns-v8-rh7lz   4/4       Running   0          4m
 ```
 
 ```bash
-$ kubectl --namespace=kube-system get services
+$ kubectl -s "$KUBE_SERVER:8080" --namespace=kube-system get services
 NAME       LABELS                                                                           SELECTOR           IP(S)       PORT(S)
 kube-dns   k8s-app=kube-dns,kubernetes.io/cluster-service=true,kubernetes.io/name=KubeDNS   k8s-app=kube-dns   10.0.0.10   53/UDP
                                                                                                                            53/TCP
