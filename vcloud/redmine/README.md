@@ -292,7 +292,7 @@ To add the firewall rule, as before, we need to do it from the vCloud Air web in
 2. Goto **Gateways > Gateway on Kubernetes > Firewall Rules**
 3. Click on the **Add** button
 
-Add a firewall rule named `inbound-SSH` with the `Protocal` set to `TCP`, `Source` to `External`, `Source Port` as `Any`, `Destination` set as `Specific CIDR, IP, or IP Range` and specify the public IP address copied in the [Network Configuration](#network-configuration) section and finally set the `Destination Port` as `22`.
+Add a firewall rule named `inbound-SSH` with the `Protocol` set to `TCP`, `Source` to `External`, `Source Port` as `Any`, `Destination` set as `Specific CIDR, IP, or IP Range` and specify the public IP address copied in the [Network Configuration](#network-configuration) section and finally set the `Destination Port` as `22`.
 
 ![firewall-inbound-SSH](images/firewall-inbound-SSH.jpg)
 
@@ -668,7 +668,7 @@ To add the firewall rule, again, we need to do it from the vCloud Air web interf
 2. Goto **Gateways > Gateway on Kubernetes > Firewall Rules**
 3. Click on the **Add** button
 
-Add a firewall rule named `inbound-HTTP` with the `Protocal` set to `TCP`, `Source` to `External`, `Source Port` as `Any`, `Destination` set as `Specific CIDR, IP, or IP Range` and specify the public IP address copied in the [Network Configuration](#network-configuration) section and finally set the `Destination Port` as `80`.
+Add a firewall rule named `inbound-HTTP` with the `Protocol` set to `TCP`, `Source` to `External`, `Source Port` as `Any`, `Destination` set as `Specific CIDR, IP, or IP Range` and specify the public IP address copied in the [Network Configuration](#network-configuration) section and finally set the `Destination Port` as `80`.
 
 ![firewall-inbound-HTTP](images/firewall-inbound-HTTP.jpg)
 
