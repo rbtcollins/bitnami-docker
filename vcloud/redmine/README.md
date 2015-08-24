@@ -29,7 +29,7 @@
 
 ### VMware vCloud Air
 
-Since this tutorial demonstrates using Bitnami containers on VMware vCloud Air using Kubernetes, you will need to [signup](#https://signupvcloud.vmware.com/1094/purl-signup) for a vCloud Air account.
+Since this tutorial demonstrates using Bitnami containers on VMware vCloud Air using Kubernetes, you will need to [signup](https://signupvcloud.vmware.com/1094/purl-signup) for a vCloud Air account.
 
 Upon signup you will receive $300 or 3 months (whichever comes first) in vCloud Air OnDemand service credits.
 
