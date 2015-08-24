@@ -5,7 +5,6 @@
     - [Download the configuration files](#download-the-configuration-files)
 - [Create a Docker container image](#create-a-docker-container-image)
 - [Create your cluster](#create-your-cluster)
-- [Create your cluster](#create-your-kubernetes-cluster-on-vcloud-air)
     - [Network Configuration](#network-configuration)
     - [Kubernetes master](#kubernetes-master)
         - [Create `k8s-master` VM](#create-k8s-master-vm)
