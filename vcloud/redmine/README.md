@@ -161,16 +161,16 @@ $ vca network
 You should see the `default-routed-network` listed. You will notice that the `default-routed-network` does not have DNS addresses configured. We will delete this network and recreate it specifying Google's public DNS servers.
 
 ```bash
-$ vca network delete -n default-routed-network
-$ vca network create -n default-routed-network \
+$ vca network delete -n default-routed-network && \
+  vca network create -n default-routed-network \
     -i 192.168.109.1 -m 255.255.255.0 \
     -1 8.8.8.8 -2 8.8.4.4 \
     -p 192.168.109.2-192.168.109.253
 ```
 
-Now if you list the existing networks using `vca network`, you will notice that the DNS server address is configured on the `default-routed-network`.
+Now if you list the existing networks using `vca network`, you will notice that the DNS server address is configured on `default-routed-network`.
 
-Next we will assign a public IP address to the gateway interface. This will allow us to access the services (Redmine) running on the cluster over the internet.
+Next we assign a public IP address to the gateway interface. This will allow us to access the services (Redmine) running on the cluster over the internet.
 
 ```bash
 $ vca gateway add-ip
@@ -350,8 +350,6 @@ This process will take a while to complete at the end of which we should have a 
 ### Kubernetes Worker
 
 #### Create `k8s-worker-01` VM
-
-Create the `k8s-worker-01` VM using the following command:
 
 ```bash
 $ vca vapp create -a k8s-worker-01-VApp -V k8s-worker-01 \
