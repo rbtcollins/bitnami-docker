@@ -73,7 +73,7 @@ $ vca instance
 | M159692122      | us-california-1-3 | Virtual Private Cloud OnDemand | 41d63a80-4148-408e-bc7d-0a0c5b87c800 |            |
 ```
 
-For this tutorial we will use the instance located in Germany, you can choose whichever location is closer to you. If you do not see more than one location then you can enable other locations using the dropdown list in the vCloud Air web interface.
+For this tutorial we will use the instance located in Germany, you can choose whichever location is closer to you. If you do not see more than one location then you can enable other locations using the dropdown list in the vCloud Air web interface and then execute the `vca instance` command.
 
 ![vcloud-air-locations-dropdown](images/vcloud-air-locations-dropdown.jpg)
 
@@ -158,7 +158,7 @@ $ vca network
 | default-routed-network | natRouted | 192.168.109.1 | 255.255.255.0 |         |         | 192.168.109.2-192.168.109.253 |
 ```
 
-You should see the `default-routed-network` listed. You will notice that the `default-routed-network` does not have DNS addresses configured. We will delete this network and recreate it specifying Google's public DNS servers.
+You will notice that the `default-routed-network` does not have DNS addresses configured. We will delete this network and recreate it specifying Google's public DNS servers.
 
 ```bash
 $ vca network delete -n default-routed-network && \
