@@ -2,8 +2,7 @@
 
 - [Prerequisites](#prerequisites)
     - [VMware vCloud Air](#vmware-vcloud-air)
-    - [Download the configuration files](#download-the-configuration-files)
-- [Create a Docker container image](#create-a-docker-container-image)
+    - [vCloud Air CLI](#vcloud-air-cli)
 - [Create your cluster](#create-your-cluster)
     - [Network Configuration](#network-configuration)
     - [Kubernetes master](#kubernetes-master)
@@ -13,6 +12,8 @@
     - [Kubernetes Worker](#kubernetes-worker)
         - [Create `k8s-worker-01` VM](#create-k8s-worker-01-vm)
         - [Setting up the worker node](#setting-up-the-worker-node)
+- [Download the configuration files](#download-the-configuration-files)
+- [Create the Redmine Docker container image](#create-the-redmine-docker-container-image)
 - [MariaDB pod and service](#mariadb-pod-and-service)
     - [MariaDB pod](#mariadb-pod)
     - [MariaDB service](#mariadb-service)
@@ -30,160 +31,276 @@
 
 Signup for a [VMware vCloud Air](https://signupvcloud.vmware.com/1094/purl-signup) account. You will get $300 or 3 months (whichever comes first) in vCloud Air OnDemand service credits upon signup.
 
-### Download the configuration files
+#### vCloud Air CLI
 
-Clone the [bitnami-docker](https://github.com/bitnami/bitnami-docker) GitHub repository:
+We will use [vca-cli](https://github.com/vmware/vca-cli) to setup the Kubernetes cluster.
+
+Install VMware's `vca` command line tool using:
 
 ```bash
-git clone https://github.com/bitnami/bitnami-docker.git
+$ sudo apt-get update
+$ sudo apt-get install -y build-essential libffi-dev libssl-dev \
+    libxml2-dev libxslt-dev python-dev
+$ wget https://bootstrap.pypa.io/get-pip.py
+$ sudo python get-pip.py
+$ sudo pip install vca-cli
 ```
 
-The files used in this tutorial can be found in the `vcloud/redmine` directory of the cloned repository:
-
-- Dockerfile
-- run.sh
-- redmine-controller.yml
-- redmine-service.yml
-- mariadb-controller.yml
-- mariadb-service.yml
-
-## Create a Docker container image
-
-The Redmine image is built using the `Dockerfile` and `run.sh` script. Docker container images can extend from other existing images so for this image, we'll extend from the existing `bitnami/ruby` image.
-
-The `Dockerfile` imports the correct Redmine source code and a `run.sh` script.
-
-The `run.sh` script uses the MariaDB connection information exposed by docker links and automatically configures the Redmine database connection parameters.
-
-Build the Redmine image by running:
+Confirm that the tool is installed and working by performing a version check:
 
 ```bash
-$ docker build -t <dockerhub-account-name>/redmine .
-```
-
-Then push this image to the Docker Hub Registry:
-
-```bash
-$ docker push <dockerhub-account-name>/redmine
+$ vca --version
+vca-cli version 14 (pyvcloud: 14)
 ```
 
 ## Create your cluster
 
-In this section we will talk through setting up a Kubernetes cluster on vCloud Air.
+Before we get to creating our Kubernetes cluster, we need to login to vCloud Air using the `vca` tool.
 
-Lets begin by logging in to our vCloud Air account.
+```bash
+$ vca login user@company.com
+```
 
-![login_welcome](images/01_login_welcome.jpg)
+Now that we are logged in lets list the available instances:
+
+```bash
+$ vca instance
+| Service Group   | Region            | Plan                           | Instance Id                          | Selected   |
+|-----------------+-------------------+--------------------------------+--------------------------------------+------------|
+| M159692122      | us-virginia-1-4   | Virtual Private Cloud OnDemand | fb35cb94-0a90-42c3-8193-d400ec1f58fb |            |
+| M159692122      | jp-japanwest-1-10 | Virtual Private Cloud OnDemand | 596f0a15-e944-40ff-a0ce-65cf5b27851e |            |
+| M159692122      | de-germany-1-16   | Virtual Private Cloud OnDemand | 06290eca-4584-4c20-acb2-25126e44be9c |            |
+| M159692122      | us-california-1-3 | Virtual Private Cloud OnDemand | 41d63a80-4148-408e-bc7d-0a0c5b87c800 |            |
+```
+
+For this tutorial we will use the instance located in Germany.
+
+```bash
+$ vca instance use --instance 06290eca-4584-4c20-acb2-25126e44be9c
+```
+
+You can list the existing VDC's using:
+
+```bash
+$ vca vdc
+```
+
+You can use one of the existing VDC's or create a new one. In this tutorial we will create a new VDC named **Kubernetes**. First we will list all VDC templates.
+
+```bash
+$ vca org list-templates
+| Template         |
+|------------------|
+| VPC Subscription |
+| d11p16v3-tp      |
+| d11p16v9-tp      |
+| dr-d11p16v3-tp   |
+```
+
+We will use the `d11p16v9-tp` template for our new Kubernetes VDC.
+
+```bash
+$ vca vdc create --vdc Kubernetes --template d11p16v9-tp
+```
+
+Now we can select the Kubernetes VDC using:
+
+```bash
+$ vca vdc use --vdc Kubernetes
+```
+
+We can check the status using:
+
+```bash
+$ vca status
+| Key              | Value                                                            |
+|------------------+------------------------------------------------------------------|
+| vca_cli_version  | 14                                                               |
+| pyvcloud_version | 14                                                               |
+| profile_file     | /home/user/.vcarc                                                |
+| profile          | default                                                          |
+| host             | https://vca.vmware.com                                           |
+| host_score       | https://score.vca.io                                             |
+| user             | user@example.com                                                 |
+| instance         | 06290eca-4584-4c20-acb2-25126e44be9c                             |
+| org              | 494267b8-b8c2-477a-9f83-3c6121aedb0d                             |
+| vdc              | Kubernetes                                                       |
+| gateway          | gateway                                                          |
+| password         | <encrypted>                                                      |
+| type             | vca                                                              |
+| version          | 5.7                                                              |
+| org_url          | https://de-germany-1-16.vchs.vmware.com/api/compute/api/sessions |
+| active session   | True                                                             |
+```
+
+> **Note!**: If you are logged out from the `vca` login, you can directly login and start using the Kubernetes cluster using:
+>
+> ```bash
+> $ vca login user@company.com --instance 06290eca-4584-4c20-acb2-25126e44be9c --vdc Kubernetes
+> ```
 
 ### Network Configuration
 
 Before we start creating virtual machines (VM) for the Kubernetes cluster, we need to perform some network configurations to allow oubound network connections from our VM's.
 
-We begin by assigning a public IP address to the gateway interface. This will allow us to access the services running on the cluster over the internet.
+List the existing networks using:
 
-Browse to the **Gateways** tab and select the listed gateway interface.
+```bash
+$ vca network
+| Name                   | Mode      | Gateway       | Netmask       | DNS 1   | DNS 2   | Pool IP Range                 |
+|------------------------+-----------+---------------+---------------+---------+---------+-------------------------------|
+| default-routed-network | natRouted | 192.168.109.1 | 255.255.255.0 |         |         | 192.168.109.2-192.168.109.253 |
+```
 
-![gateways](images/02_gateways.jpg)
+You should see the `default-routed-network` listed. As you can notice, the network does not have DNS addresses configured. We will delete this network and recreate it specifying Google's public DNS servers.
 
-Next, select the **Public IPs** tab and click the **Add IP Address** button to add a public IP address.
+```bash
+$ vca network delete -n default-routed-network
+$ vca network create -n default-routed-network \
+    -i 192.168.109.1 -m 255.255.255.0 \
+    -1 8.8.8.8 -2 8.8.4.4 \
+    -p 192.168.109.2-192.168.109.253
+```
 
-![gateway_public_ips_add](images/03_gateway_public_ips_add.jpg)
+Now if we list the existing networks using `vca network`, you will notice that the DNS server address is configured on the `default-routed-network`.
 
-The public IP address will now be listed. Copy the displayed IP address as it will be used in the following sections.
+Next we will assign a public IP address to the gateway interface.  This will allow us to access the services running on the cluster over the internet.
 
-![gateway_public_ips_list](images/04_gateway_public_ips_list.jpg)
+```bash
+$ vca gateway add-ip
+```
 
-Next we will add a Source NAT (SNAT) rule. Select the **NAT Rules** tab and add a new SNAT rule as displayed in the below screenshot.
+To get the details of the gateway:
 
-> **Note!**: The IP address entered in the **Translated (External) Source** is the public IP address of our Gateway.
+```bash
+$ vca gateway info
+| Property         | Value        |
+|------------------+--------------|
+| Name             | gateway      |
+| DCHP Service     | Off          |
+| Firewall Service | On           |
+| NAT Service      | Off          |
+| VPN Service      | Off          |
+| Syslog           |              |
+| External IP #    | 1            |
+| External IPs     | 92.246.241.9 |
+| Uplinks          | d11p16v9-ext |
+```
 
-![gateway_nat_add_SNAT](images/05_gateway_nat_add_SNAT.jpg)
+Copy the IP listed under `External IPs` as it is used while configuring the NAT and Firewall rules as well as to access the applications running on the cluster.
 
-Next, we need to add a firewall rule to allow outgoing network connections from our virtual machines.
+For the VM's created in our cluster to be able to access the internet we need to add some NAT and Firewall rules.
 
-Select the **Firewall Rules** tab and add a new rule named **outbound-ALL** as shown in the screenshot below.
+The following command adds a SNAT rule:
 
-![gateway_firewall_add](images/07_gateway_firewall_add-outbound-ALL.jpg)
+```bash
+$ vca nat add --type snat \
+    --original-ip 192.168.109.0/24 --translated-ip 92.246.241.9
+```
 
-Optionally, we can add an **inbound-ICMP** rule as shown below. This will allow us to ping the gateway.
+Next we need to add a Firewall rule. Unfortunately, at the time of writing, this is not possible using the `vca` tool. So we will perform this from vCloud Air's web browser interface.
 
-![gateway_firewall_add](images/08_gateway_firewall_add-inbound-ICMP.jpg)
+After logging in to the vCloud Air interface:
 
-After performing the above firewall configurations the firewall rules will look something like this.
+1. On the left sidebar, click on the **Kubernetes** VDC
+2. Goto **Gateways > Gateway on Kubernetes > Firewall Rules**
+3. Click on the **Add Firewall Rule** button
 
-![gateway_firewall_list](images/09_gateway_firewall_list.jpg)
+Add a firewall rule named `outbound-ALL` with the source as `Internal` and destination as `External`.
 
-To complete our network configuration, we need to configure the DNS addresses that will be configured on the VM's.
+![gateway_public_ips_list](images/firewall-outbound-ALL.jpg)
 
-Select the **Networks** tab and click the **Manage in vCloud Director** link. vCloud Director will open in a new browser tab.
+You can list the NAT rules using `vca nat` and the firewall rules using `vca firewall`.
 
-![networks](images/10_networks.jpg)
-
-*Please note that vCloud Director requires the Adobe Flash web-browser plugin*
-
-In vCloud Director select the **default-routed-network** and load the **Properties** dialog as displayed in the screenshot below.
-
-![network_properties](images/11_network_properties.jpg)
-
-Under the DNS settings enter the address of the DNS server you want to use and apply the changes. In this tutorial we use Google's Public DNS servers `8.8.8.8` and `8.8.4.4`.
-
-![network_configure_dns](images/12_network_configure_dns.jpg)
-
-And we are done with the network configuration. In the following sections we will setup the Kubernetes master and worker nodes.
+This brings us to the end of the network configuration. We should now be able to spin up VM's and be assured that they will be able to connect to the internet.
 
 ### Kubernetes master
 
-A Kubernetes cluster consists on one master node and one or more worker nodes. In this section we will create a virtual machine for the master node.
+A Kubernetes cluster consists on one master node and one or more worker nodes. In this section we will create a virtual machine for the master node named `k8s-master`.
 
 #### Create `k8s-master` VM
 
-Begin by creating a new virtual machine.
+Begin by listing the catalog and items:
 
-![vm_create_k8s](images/13_vm_create_k8s-master.jpg)
+```bash
+$ vca catalog
+| Catalog        | Item                                     |
+|----------------+------------------------------------------|
+| Public Catalog | CentOS63-64BIT                           |
+| Public Catalog | W2K12-STD-64BIT                          |
+| Public Catalog | CentOS64-64BIT                           |
+| Public Catalog | W2K12-STD-R2-64BIT                       |
+| Public Catalog | CentOS64-32BIT                           |
+| Public Catalog | W2K8-STD-R2-64BIT                        |
+| Public Catalog | photon-1.0TP1.iso                        |
+| Public Catalog | Ubuntu Server 12.04 LTS (amd64 20150127) |
+| Public Catalog | CentOS63-32BIT                           |
+| Public Catalog | Ubuntu Server 12.04 LTS (i386 20150127)  |
+```
 
-Select the **Ubuntu 12.04 Server AMD64** virtual machine template from the VMware Catalog.
+We will be using the `Ubuntu Server 12.04 LTS (amd64 20150127)` image from the `Public Catalog`.
 
-![vm_select_k8s](images/14_vm_select_k8s-master_image.jpg)
+Create the `k8s-master` VM using the following command:
 
-Name the virtual machine **k8s-master** and assign the desired system resources to the VM and create the virtual machine.
+```bash
+$ vca vapp create -a k8s-master-VApp -V k8s-master \
+    -c 'Public Catalog' -t 'Ubuntu Server 12.04 LTS (amd64 20150127)' \
+    -n default-routed-network -m manual --ip 192.168.109.200 --cpu 2 --ram 4096
+```
 
-![vm_select_k8s](images/15_vm_select_k8s-master_resources.jpg)
+In this command we are creating a VM named `k8s-master` with the static IP address `192.168.109.200`, `2` vCPUs and `4` Gigabytes of RAM. Feel free to change this as per your requirements.
 
-A VM named **ks8-master** should now be listed under the **Virtual Machines** tab and should enter the powered on state in a couple of minutes.
+Power on the VM using:
 
-![vm_k8s](images/16_vm_k8s-master.jpg)
+```bash
+$ vca vapp power-on --vapp k8s-master-VApp
+```
 
-Select the VM to view its settings and properties.
+Once powered on you can get the VM details such as the `cpu`, `ram`, `admin_password`, etc. using:
 
-Under the **Networks** tab you will find the IP address of the virtual machine. Please note it down as it will be required later.
+```bash
+$ vca vapp info -a k8s-master-VApp -V k8s-master
+```
 
-![vm_networks](images/17_vm_networks.jpg)
+To access the console of the VM, in the vCloud Air web interface:
 
-Under the **Settings** tab you will find the **Guest OS Password** and also a link to **Open Virtual Machine Console**. Click this link to open a console session to the VM. Upon login as `root` user, you will be required change the default password.
+1. On the left sidebar, click on the **Kubernetes** VDC
+2. Goto **Virtual Machines > k8s-master > Settings**
+3. Click on the **Open Virtual Machine Console** link
 
-![vm_settings](images/18_vm_settings.jpg)
+Optionally you can enable remote SSH access using instructions listed in the next section.
 
 #### Allow remote SSH connections (Optional)
 
-Optionally we can update the network configuration to allow incoming SSH connections to our **k8s-master** VM.
+To enable remote SSH access to the `k8s-master` VM we need to add some NAT and Firewall rules.
 
-Add a new **DNAT** rule under the **Gateway > NAT** section as shown below. Set the **Original (External) IP** to the public IP address of the gateway and the **Translated (Internal) IP/Range** to the IP address of the VM.
+Add a DNAT rule using:
 
-![gateway_nat_add_DNAT](images/19_gateway_nat_add_DNAT.jpg)
+```bash
+$ vca nat add --type dnat \
+    --original-ip 92.246.241.9 --original-port 22 \
+    --translated-ip 192.168.109.200 --translated-port 22 --protocol tcp
+```
 
-After performing the above NAT configuration the NAT Rules will look something like this.
+To add the firewall rule, as before, we need to do it from the vCloud Air web interface.
 
-![gateway_nat_list](images/20_gateway_nat_list.jpg)
+1. On the left sidebar, click on the **Kubernetes** VDC
+2. Goto **Gateways > Gateway on Kubernetes > Firewall Rules**
+3. Click on the **Add** button
 
-Next, we need to add a firewall rule to allow inbound SSH connections to the **k8s-master** VM.
+Add a firewall rule named `inbound-SSH` with the `Protocal` as `TCP`, `Source` as `External`, `Source Port` as `Any`, `Destination` as `Specific CIDR, IP, or IP Range` and specify the public IP address copied in the [Network Configuration](#network-configuration) section and finally set the `Destination Port` as `22`.
 
-![gateway_firewall_add](images/21_gateway_firewall_add-inbound-SSH.jpg)
+![firewall-inbound-SSH](images/firewall-inbound-SSH.jpg)
 
-After performing the above firewall configurations the firewall rules will look something like this.
-
-![gateway_firewall_list](images/22_gateway_firewall_list.jpg)
+Like before you can list the NAT rules using `vca nat` and the firewall rules using `vca firewall`.
 
 With this configuration, you should now be able to login to the **ks-master** VM using an SSH client.
+
+```bash
+$ ssh 92.246.241.9 -l root
+```
+
+Login using the `admin_password` displayed in the output of the `vca vapp info -a k8s-master-VApp -V k8s-master` command.
 
 #### Setting up the master node
 
@@ -195,13 +312,13 @@ $ apt-get update && apt-get -y upgrade
 
 *It recommended that you reboot the VM after updating the system*
 
-Next we install Docker, followed by the Kubernetes `kubectl` command.
+Next install Docker
 
 ```bash
 $ curl -sSL https://get.docker.com/ | sh
 ```
 
-Set `K8S_VERSION` to the most recent Kubernetes release
+Now we install the Kubernetes `kubectl` command. Set `K8S_VERSION` to the most recent Kubernetes release.
 
 ```bash
 $ export K8S_VERSION=1.0.3
@@ -226,19 +343,43 @@ $ ./master.sh
 
 This process will take a while to complete at the end of which we should have a working Kubernetes master node.
 
-While the node is being setup, you can go ahead and setup one or more worker nodes.
-
 ### Kubernetes Worker
 
-#### Create `k8s-master` VM
+#### Create `k8s-worker-01` VM
 
-Similar to creating a VM for the master node, we create a VM for the worker node.
+Create the `k8s-worker-01` VM using the following command:
 
-![vm_ks8-worker](images/23_vm_ks8-worker.jpg)
+```bash
+$ vca vapp create -a k8s-worker-01-VApp -V k8s-worker-01 \
+    -c 'Public Catalog' -t 'Ubuntu Server 12.04 LTS (amd64 20150127)' -n default-routed-network \
+    -m manual --ip 192.168.109.201 --cpu 2 --ram 4096
+```
 
-Name the virtual machine **k8s-worker-01** and assign the desired system resources to the VM and create the virtual machine.
+In this command we are creating a VM named `k8s-worker-01` with the static IP address `192.168.109.201`, `2` vCPUs and `4` Gigabytes of RAM. Feel free to change this as per your requirements.
 
-A VM named **ks8-worker-01** should now be listed under the **Virtual Machines** tab and should enter the powered on state in a couple of minutes.
+Power on the VM using:
+
+```bash
+$ vca vapp power-on --vapp k8s-worker-01-VApp
+```
+
+Once powered on you can get the VM details such as the `cpu`, `ram`, `admin_password`, etc. using:
+
+```bash
+$ vca vapp info -a k8s-worker-01-VApp -V k8s-worker-01
+```
+
+To access the console of the VM, in the vCloud Air web interface:
+
+1. On the left sidebar, click on the **Kubernetes** VDC
+2. Goto **Virtual Machines > k8s-worker-01 > Settings**
+3. Click on the **Open Virtual Machine Console** link
+
+If you have enable remote SSH access to the `k8s-master` VM, the you can login to the `k8s-worker-01` VM from the `k8s-master` VM by SSH'ing to `192.168.109.201`:
+
+```bash
+ssh 192.168.109.201 -l root
+```
 
 #### Setting up the worker node
 
@@ -274,7 +415,7 @@ $ chmod +x /usr/local/bin/kubectl
 Finally we setup the VM as a worker node of the Kubernetes cluster. First set the `MASTER_IP` environment variable to the IP address of the **ks8-master** VM.
 
 ```bash
-$ export MASTER_IP=192.168.109.2
+$ export MASTER_IP=192.168.109.200
 ```
 
 And begin the install.
@@ -287,7 +428,7 @@ $ ./worker.sh
 
 Like the master node setup, the this process will take a while to complete at the end of which the worker should be ready.
 
-You can repeat the instructions in [Kubernetes Worker](#kubernetes-worker) to add more worker nodes if you wish to.
+You can repeat these instructions in [Kubernetes Worker](#kubernetes-worker) to add more worker nodes if you wish to. Remember to change the name and IP address while adding new VM's to the cluster.
 
 ### Deploy DNS
 
@@ -306,7 +447,7 @@ Next, we need to configure some environment variables, namely `DNS_REPLICAS` , `
 $ export DNS_REPLICAS=1
 $ export DNS_DOMAIN=cluster.local
 $ export DNS_SERVER_IP=10.0.0.10
-$ export KUBE_SERVER=192.168.109.2
+$ export KUBE_SERVER=192.168.109.200
 ```
 
 Next we generate the configuration using the templates and the above configuration.
@@ -336,20 +477,7 @@ Once the pods are in the `Running` state, create the `skydns` service using `kub
 $ kubectl -s "$KUBE_SERVER:8080" --namespace=kube-system create -f ./skydns-svc.yaml
 ```
 
-Lets perform some basic checks to see if the Kubernetes cluster has been setup correctly.
-
-```bash
-$ kubectl -s "$KUBE_SERVER:8080" get nodes
-NAME        LABELS                             STATUS
-127.0.0.1   kubernetes.io/hostname=127.0.0.1   Ready
-127.0.1.1   kubernetes.io/hostname=127.0.1.1   Ready
-```
-
-```bash
-$ kubectl -s "$KUBE_SERVER:8080" --namespace=kube-system get pods
-NAME                READY     STATUS    RESTARTS   AGE
-kube-dns-v8-rh7lz   4/4       Running   0          4m
-```
+See it running:
 
 ```bash
 $ kubectl -s "$KUBE_SERVER:8080" --namespace=kube-system get services
@@ -358,9 +486,59 @@ kube-dns   k8s-app=kube-dns,kubernetes.io/cluster-service=true,kubernetes.io/nam
                                                                                                                            53/TCP
 ```
 
-And there you have it, we have a Kubernetes cluster setup on vCloud Air. You can run further tests on your cluster using these instructions: https://github.com/kubernetes/kubernetes/blob/master/docs/getting-started-guides/docker-multinode/testing.md
+Lets perform a basic check to see if the Kubernetes cluster has been setup correctly.
 
-From this point, all commands will be executed in the master nodes console. If you wish to execute the commands in the worker nodes shell add the `-s "$KUBE_SERVER:8080"` argument to the kubectl commands.
+```bash
+$ kubectl -s "$KUBE_SERVER:8080" get nodes
+NAME        LABELS                             STATUS
+127.0.0.1   kubernetes.io/hostname=127.0.0.1   Ready
+127.0.1.1   kubernetes.io/hostname=127.0.1.1   Ready
+```
+
+And there you have it, a Kubernetes cluster running on vCloud Air. You can run further tests on your cluster using these instructions: https://github.com/kubernetes/kubernetes/blob/master/docs/getting-started-guides/docker-multinode/testing.md
+
+> **Note!** *From this point on, all `kubectl` commands will be executed in the `k8s-master` nodes console.*
+
+### Download the configuration files
+
+Clone the [bitnami-docker](https://github.com/bitnami/bitnami-docker) GitHub repository:
+
+```bash
+git clone https://github.com/bitnami/bitnami-docker.git
+```
+
+The files used in this tutorial can be found in the `vcloud/redmine` directory of the cloned repository:
+
+- Dockerfile
+- run.sh
+- redmine-controller.yml
+- redmine-service.yml
+- mariadb-controller.yml
+- mariadb-service.yml
+
+```bash
+cd bitnami-docker/vcloud/redmine/
+```
+
+## Create the Redmine Docker container image
+
+The Redmine image is built using the `Dockerfile` and `run.sh` script. Docker container images can extend from other existing images so for this image, we'll extend from the existing `bitnami/ruby` image.
+
+The `Dockerfile` imports the correct Redmine source code and a `run.sh` script.
+
+The `run.sh` script uses the MariaDB connection information exposed by docker links and automatically configures the Redmine database connection parameters.
+
+Build the Redmine image by running:
+
+```bash
+$ docker build -t <dockerhub-account-name>/redmine .
+```
+
+Then push this image to the Docker Hub Registry:
+
+```bash
+$ docker push <dockerhub-account-name>/redmine
+```
 
 ## MariaDB pod and service
 
@@ -474,13 +652,23 @@ redmine   name=redmine   name=redmine   10.0.0.226   80/TCP
 
 By default, the pod is only accessible by its internal IP within the cluster. In order to make the Redmine service accessible from the Internet we have to open port 80 and forward it to port `30000` (`nodePort`) of our master node.
 
-Login to the vCloud Air interface and update the **Gateway > NAT Rules** configuration as showing in the screenshot below.
+For this we need to add some NAT and Firewall rules. To add the NAT rule:
 
-![gateway_nat_add_DNAT_HTTP](images/24_gateway_nat_add_DNAT_HTTP.jpg)
+```bash
+$ vca nat add --type dnat \
+    --original-ip 92.246.241.9 --original-port 80 \
+    --translated-ip 192.168.109.200 --translated-port 30000 --protocol tcp
+```
 
-Next, go to the **Gateway > Firewall Rules** configuration page and add the **inbound-HTTP** rule as shown in the screenshot below:
+To add the firewall rule, again, we need to do it from the vCloud Air web interface.
 
-![gateway_firewall_add-inbound-HTTP](images/25_gateway_firewall_add-inbound-HTTP.jpg)
+1. On the left sidebar, click on the **Kubernetes** VDC
+2. Goto **Gateways > Gateway on Kubernetes > Firewall Rules**
+3. Click on the **Add** button
+
+Add a firewall rule named `inbound-HTTP` with the `Protocal` as `TCP`, `Source` as `External`, `Source Port` as `Any`, `Destination` as `Specific CIDR, IP, or IP Range` and specify the public IP address copied in the [Network Configuration](#network-configuration) section and finally set the `Destination Port` as `80`.
+
+![firewall-inbound-HTTP](images/firewall-inbound-HTTP.jpg)
 
 ## Access your Redmine server
 
@@ -528,6 +716,9 @@ To delete your application completely:
     $ kubectl delete rc mariadb
     ```
 
-3. Delete the VM's of the cluster:
+3. Delete the Kubernetes VDC:
 
-    Login to vCloud Air, power-off and delete the VM's that are part of your cluster.
+    ```bash
+    $ vca vdc delete --vdc Kubernetes
+    ```
+
