@@ -35,9 +35,7 @@ Upon signup you will receive $300 or 3 months (whichever comes first) in vCloud 
 
 #### vCloud Air CLI
 
-We will use [vca-cli](https://github.com/vmware/vca-cli) to setup the Kubernetes cluster.
-
-Install VMware's `vca` command line tool using:
+Install VMware's [vca-cli](https://github.com/vmware/vca-cli) tool using:
 
 ```bash
 $ sudo apt-get update
@@ -57,13 +55,13 @@ vca-cli version 14 (pyvcloud: 14)
 
 ## Create your cluster
 
-Before we get to creating our Kubernetes cluster, we need to login to vCloud Air using the `vca` tool.
+Before you get to creating the Kubernetes cluster, we need to login to vCloud Air using the `vca` tool.
 
 ```bash
 $ vca login user@company.com
 ```
 
-Now that we are logged in lets list the available instances:
+Now that we are logged in list the available instances using:
 
 ```bash
 $ vca instance
@@ -75,7 +73,11 @@ $ vca instance
 | M159692122      | us-california-1-3 | Virtual Private Cloud OnDemand | 41d63a80-4148-408e-bc7d-0a0c5b87c800 |            |
 ```
 
-For this tutorial we will use the instance located in Germany.
+For this tutorial we will use the instance located in Germany, you can choose whichever location is closer to you. If you do not see more than one location then you can enable other locations using the dropdown list in the vCloud Air web interface.
+
+![vcloud-air-locations-dropdown](images/vcloud-air-locations-dropdown.jpg)
+
+> **Note!**: If you face issues following this tutorial, please try switching to a different location.
 
 ```bash
 $ vca instance use --instance 06290eca-4584-4c20-acb2-25126e44be9c
@@ -87,7 +89,9 @@ You can list the existing VDC's using:
 $ vca vdc
 ```
 
-You can use one of the existing VDC's or create a new one. In this tutorial we will create a new VDC named **Kubernetes**. First we will list all VDC templates.
+You can use one of the existing VDC's or create a new one. In this tutorial we will create a new VDC named **Kubernetes**.
+
+List all VDC templates using:
 
 ```bash
 $ vca org list-templates
@@ -111,7 +115,7 @@ Now we can select the Kubernetes VDC using:
 $ vca vdc use --vdc Kubernetes
 ```
 
-We can check the status using:
+Check the configuration status using:
 
 ```bash
 $ vca status
@@ -143,7 +147,7 @@ $ vca status
 
 ### Network Configuration
 
-Before we start creating virtual machines (VM) for the Kubernetes cluster, we need to perform some network configurations to allow oubound network connections from our VM's.
+Before you start creating virtual machines (VM) for the Kubernetes cluster we need to perform some network configurations to allow outbound network connections from our VM's.
 
 List the existing networks using:
 
@@ -154,7 +158,7 @@ $ vca network
 | default-routed-network | natRouted | 192.168.109.1 | 255.255.255.0 |         |         | 192.168.109.2-192.168.109.253 |
 ```
 
-You should see the `default-routed-network` listed. As you can notice, the network does not have DNS addresses configured. We will delete this network and recreate it specifying Google's public DNS servers.
+You should see the `default-routed-network` listed. You will notice that the `default-routed-network` does not have DNS addresses configured. We will delete this network and recreate it specifying Google's public DNS servers.
 
 ```bash
 $ vca network delete -n default-routed-network
@@ -164,9 +168,9 @@ $ vca network create -n default-routed-network \
     -p 192.168.109.2-192.168.109.253
 ```
 
-Now if we list the existing networks using `vca network`, you will notice that the DNS server address is configured on the `default-routed-network`.
+Now if you list the existing networks using `vca network`, you will notice that the DNS server address is configured on the `default-routed-network`.
 
-Next we will assign a public IP address to the gateway interface.  This will allow us to access the services running on the cluster over the internet.
+Next we will assign a public IP address to the gateway interface. This will allow us to access the services (Redmine) running on the cluster over the internet.
 
 ```bash
 $ vca gateway add-ip
@@ -208,21 +212,21 @@ After logging in to the vCloud Air interface:
 2. Goto **Gateways > Gateway on Kubernetes > Firewall Rules**
 3. Click on the **Add Firewall Rule** button
 
-Add a firewall rule named `outbound-ALL` with the source as `Internal` and destination as `External`.
+Add a firewall rule named `outbound-ALL` with the `Source` set to `Internal` and `Destination` set as `External`.
 
 ![gateway_public_ips_list](images/firewall-outbound-ALL.jpg)
 
 You can list the NAT rules using `vca nat` and the firewall rules using `vca firewall`.
 
-This brings us to the end of the network configuration. We should now be able to spin up VM's and be assured that they will be able to connect to the internet.
+We should now be able to spin up VM's and be assured that they will be able to connect to the internet.
 
 ### Kubernetes master
 
-A Kubernetes cluster consists on one master node and one or more worker nodes. In this section we will create a virtual machine for the master node named `k8s-master`.
+A Kubernetes cluster consists on one master node and zero or more worker nodes. In this section we will setup a master node named `k8s-master`.
 
 #### Create `k8s-master` VM
 
-Begin by listing the catalog and items:
+List the catalog items using:
 
 ```bash
 $ vca catalog
@@ -240,9 +244,7 @@ $ vca catalog
 | Public Catalog | Ubuntu Server 12.04 LTS (i386 20150127)  |
 ```
 
-We will be using the `Ubuntu Server 12.04 LTS (amd64 20150127)` image from the `Public Catalog`.
-
-Create the `k8s-master` VM using the following command:
+We will be using the `Ubuntu Server 12.04 LTS (amd64 20150127)` VM image from the `Public Catalog` for our master VM.
 
 ```bash
 $ vca vapp create -a k8s-master-VApp -V k8s-master \
@@ -250,7 +252,7 @@ $ vca vapp create -a k8s-master-VApp -V k8s-master \
     -n default-routed-network -m manual --ip 192.168.109.200 --cpu 2 --ram 4096
 ```
 
-In this command we are creating a VM named `k8s-master` with the static IP address `192.168.109.200`, `2` vCPUs and `4` Gigabytes of RAM. Feel free to change this as per your requirements.
+In this command we are creating a VM named `k8s-master` with the static IP address `192.168.109.200`, `2` vCPUs and `4G` RAM. Feel free to change this as per your requirements. Unfortunately we cannot specify the storage space using `vca` so we will stick with the default `10G` disk space.
 
 Power on the VM using:
 
@@ -290,13 +292,13 @@ To add the firewall rule, as before, we need to do it from the vCloud Air web in
 2. Goto **Gateways > Gateway on Kubernetes > Firewall Rules**
 3. Click on the **Add** button
 
-Add a firewall rule named `inbound-SSH` with the `Protocal` as `TCP`, `Source` as `External`, `Source Port` as `Any`, `Destination` as `Specific CIDR, IP, or IP Range` and specify the public IP address copied in the [Network Configuration](#network-configuration) section and finally set the `Destination Port` as `22`.
+Add a firewall rule named `inbound-SSH` with the `Protocal` set to `TCP`, `Source` to `External`, `Source Port` as `Any`, `Destination` set as `Specific CIDR, IP, or IP Range` and specify the public IP address copied in the [Network Configuration](#network-configuration) section and finally set the `Destination Port` as `22`.
 
 ![firewall-inbound-SSH](images/firewall-inbound-SSH.jpg)
 
 Like before you can list the NAT rules using `vca nat` and the firewall rules using `vca firewall`.
 
-With this configuration, you should now be able to login to the **ks-master** VM using an SSH client.
+With this configuration, you should now be able to login to the **k8s-master** VM using an SSH client.
 
 ```bash
 $ ssh 92.246.241.9 -l root
@@ -357,7 +359,7 @@ $ vca vapp create -a k8s-worker-01-VApp -V k8s-worker-01 \
     -m manual --ip 192.168.109.201 --cpu 2 --ram 4096
 ```
 
-In this command we are creating a VM named `k8s-worker-01` with the static IP address `192.168.109.201`, `2` vCPUs and `4` Gigabytes of RAM. Feel free to change this as per your requirements.
+In this command we are creating a VM named `k8s-worker-01` with the static IP address `192.168.109.201`, `2` vCPUs and `4G` RAM.
 
 Power on the VM using:
 
@@ -668,7 +670,7 @@ To add the firewall rule, again, we need to do it from the vCloud Air web interf
 2. Goto **Gateways > Gateway on Kubernetes > Firewall Rules**
 3. Click on the **Add** button
 
-Add a firewall rule named `inbound-HTTP` with the `Protocal` as `TCP`, `Source` as `External`, `Source Port` as `Any`, `Destination` as `Specific CIDR, IP, or IP Range` and specify the public IP address copied in the [Network Configuration](#network-configuration) section and finally set the `Destination Port` as `80`.
+Add a firewall rule named `inbound-HTTP` with the `Protocal` set to `TCP`, `Source` to `External`, `Source Port` as `Any`, `Destination` set as `Specific CIDR, IP, or IP Range` and specify the public IP address copied in the [Network Configuration](#network-configuration) section and finally set the `Destination Port` as `80`.
 
 ![firewall-inbound-HTTP](images/firewall-inbound-HTTP.jpg)
 
