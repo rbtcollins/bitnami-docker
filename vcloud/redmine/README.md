@@ -193,7 +193,11 @@ $ vca gateway info
 | Uplinks          | d11p16v9-ext |
 ```
 
-Copy the IP listed under `External IPs` as it is used while configuring the NAT and Firewall rules as well as to access the applications running on the cluster.
+Set the value displayed under `External IPs` in a variable named `EXTERNAL_IP`. This is the public IP address of our cluster and will be used while configuring the NAT and Firewall rules as well as to access the applications running on the cluster.
+
+```bash
+export EXTERNAL_IP=92.246.241.9
+```
 
 For the VM's created in our cluster to be able to access the internet we need to add some NAT and Firewall rules.
 
@@ -201,7 +205,7 @@ The following command adds a SNAT rule:
 
 ```bash
 $ vca nat add --type snat \
-    --original-ip 192.168.109.0/24 --translated-ip 92.246.241.9
+    --original-ip 192.168.109.0/24 --translated-ip $EXTERNAL_IP
 ```
 
 Next we need to add a Firewall rule. Unfortunately, at the time of writing, this is not possible using the `vca` tool. So we will perform this from vCloud Air's web browser interface.
@@ -282,7 +286,7 @@ Add a DNAT rule using:
 
 ```bash
 $ vca nat add --type dnat \
-    --original-ip 92.246.241.9 --original-port 22 \
+    --original-ip $EXTERNAL_IP --original-port 22 \
     --translated-ip 192.168.109.200 --translated-port 22 --protocol tcp
 ```
 
@@ -292,7 +296,7 @@ To add the firewall rule, as before, we need to do it from the vCloud Air web in
 2. Goto **Gateways > Gateway on Kubernetes > Firewall Rules**
 3. Click on the **Add** button
 
-Add a firewall rule named `inbound-SSH` with the `Protocol` set to `TCP`, `Source` to `External`, `Source Port` as `Any`, `Destination` set as `Specific CIDR, IP, or IP Range` and specify the public IP address copied in the [Network Configuration](#network-configuration) section and finally set the `Destination Port` as `22`.
+Add a firewall rule named `inbound-SSH` with the `Protocol` set to `TCP`, `Source` to `External`, `Source Port` as `Any`, `Destination` set as `Specific CIDR, IP, or IP Range` and specify the public IP address from the `EXTERNAL_IP` variable and finally set the `Destination Port` as `22`.
 
 ![firewall-inbound-SSH](images/firewall-inbound-SSH.jpg)
 
@@ -301,7 +305,7 @@ Like before you can list the NAT rules using `vca nat` and the firewall rules us
 With this configuration, you should now be able to login to the **k8s-master** VM using an SSH client.
 
 ```bash
-$ ssh 92.246.241.9 -l root
+$ ssh $EXTERNAL_IP -l root
 ```
 
 Login using the `admin_password` displayed in the output of the `vca vapp info -a k8s-master-VApp -V k8s-master` command.
@@ -658,7 +662,7 @@ For this we need to add some NAT and Firewall rules. To add the NAT rule:
 
 ```bash
 $ vca nat add --type dnat \
-    --original-ip 92.246.241.9 --original-port 80 \
+    --original-ip $EXTERNAL_IP --original-port 80 \
     --translated-ip 192.168.109.200 --translated-port 30000 --protocol tcp
 ```
 
@@ -668,13 +672,13 @@ To add the firewall rule, again, we need to do it from the vCloud Air web interf
 2. Goto **Gateways > Gateway on Kubernetes > Firewall Rules**
 3. Click on the **Add** button
 
-Add a firewall rule named `inbound-HTTP` with the `Protocol` set to `TCP`, `Source` to `External`, `Source Port` as `Any`, `Destination` set as `Specific CIDR, IP, or IP Range` and specify the public IP address copied in the [Network Configuration](#network-configuration) section and finally set the `Destination Port` as `80`.
+Add a firewall rule named `inbound-HTTP` with the `Protocol` set to `TCP`, `Source` to `External`, `Source Port` as `Any`, `Destination` set as `Specific CIDR, IP, or IP Range` and specify the public IP address from the `EXTERNAL_IP` variable and finally set the `Destination Port` as `80`.
 
 ![firewall-inbound-HTTP](images/firewall-inbound-HTTP.jpg)
 
 ## Access your Redmine server
 
-Now that the firewall is open, you can access the service using the public IP address of your gateway. Visit `http://x.x.x.x` where `x.x.x.x` is the public IP address of the gateway from the [Network Configuration](#network-configuration) section.
+Now that the firewall is open, you can access the service using the public IP address (`EXTERNAL_IP`) of your gateway. Visit `http://x.x.x.x` where `x.x.x.x` is the public IP address of the gateway from the [Network Configuration](#network-configuration) section.
 
 ## Scaling the Redmine application
 
