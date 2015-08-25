@@ -326,7 +326,7 @@ Next install Docker
 $ curl -sSL https://get.docker.com/ | sh
 ```
 
-Now we install the Kubernetes `kubectl` command. Set `K8S_VERSION` to the most recent Kubernetes release.
+Now we install the Kubernetes `kubectl` command. Set `K8S_VERSION` to the most recent Kubernetes [release](https://github.com/kubernetes/kubernetes/releases)
 
 ```bash
 $ export K8S_VERSION=1.0.3
@@ -403,7 +403,7 @@ Next we install Docker, followed by the Kubernetes `kubectl` command.
 $ curl -sSL https://get.docker.com/ | sh
 ```
 
-Set `K8S_VERSION` to the most recent Kubernetes release
+Set `K8S_VERSION` to the most recent Kubernetes [release](https://github.com/kubernetes/kubernetes/releases)
 
 ```bash
 $ export K8S_VERSION=1.0.3
