@@ -335,18 +335,18 @@ $ export K8S_VERSION=1.0.3
 Install the `kubectl` command.
 
 ```bash
-$ wget https://github.com/kubernetes/kubernetes/releases/download/v${K8S_VERSION}/kubernetes.tar.gz
-$ tar xf kubernetes.tar.gz
-$ cp kubernetes/platforms/linux/$(dpkg --print-architecture)/kubectl /usr/local/bin
-$ chmod +x /usr/local/bin/kubectl
+$ wget https://github.com/kubernetes/kubernetes/releases/download/v${K8S_VERSION}/kubernetes.tar.gz && \
+  tar xf kubernetes.tar.gz && \
+  cp kubernetes/platforms/linux/$(dpkg --print-architecture)/kubectl /usr/local/bin && \
+  chmod +x /usr/local/bin/kubectl
 ```
 
 Finally we setup the VM to be the master node of the Kubernetes cluster.
 
 ```bash
-$ wget https://raw.githubusercontent.com/kubernetes/kubernetes/master/docs/getting-started-guides/docker-multinode/master.sh
-$ chmod +x master.sh
-$ ./master.sh
+$ wget https://raw.githubusercontent.com/kubernetes/kubernetes/master/docs/getting-started-guides/docker-multinode/master.sh && \
+  chmod +x master.sh && \
+  ./master.sh
 ```
 
 This process will take a while to complete at the end of which we should have a working Kubernetes master node.
@@ -412,10 +412,10 @@ $ export K8S_VERSION=1.0.3
 Install the `kubectl` command.
 
 ```bash
-$ wget https://github.com/kubernetes/kubernetes/releases/download/v${K8S_VERSION}/kubernetes.tar.gz
-$ tar xf kubernetes.tar.gz
-$ cp kubernetes/platforms/linux/$(dpkg --print-architecture)/kubectl /usr/local/bin
-$ chmod +x /usr/local/bin/kubectl
+$ wget https://github.com/kubernetes/kubernetes/releases/download/v${K8S_VERSION}/kubernetes.tar.gz && \
+  tar xf kubernetes.tar.gz && \
+  cp kubernetes/platforms/linux/$(dpkg --print-architecture)/kubectl /usr/local/bin && \
+  chmod +x /usr/local/bin/kubectl
 ```
 
 Finally we setup the VM as a worker node of the Kubernetes cluster. First set the `MASTER_IP` environment variable to the IP address of the **ks8-master** VM.
@@ -427,9 +427,9 @@ $ export MASTER_IP=192.168.109.200
 And begin the install.
 
 ```bash
-$ wget https://raw.githubusercontent.com/kubernetes/kubernetes/master/docs/getting-started-guides/docker-multinode/worker.sh
-$ chmod +x worker.sh
-$ ./worker.sh
+$ wget https://raw.githubusercontent.com/kubernetes/kubernetes/master/docs/getting-started-guides/docker-multinode/worker.sh && \
+  chmod +x worker.sh && \
+  ./worker.sh
 ```
 
 Like the master node setup, the this process will take a while to complete at the end of which the worker should be ready.
@@ -443,24 +443,24 @@ To complete the setup of our Kubernetes cluster we need to deploy a DNS. These i
 First, download the configuration templates.
 
 ```bash
-$ wget https://raw.githubusercontent.com/kubernetes/kubernetes/master/docs/getting-started-guides/docker-multinode/skydns-rc.yaml.in
-$ wget https://raw.githubusercontent.com/kubernetes/kubernetes/master/docs/getting-started-guides/docker-multinode/skydns-svc.yaml.in
+$ wget https://raw.githubusercontent.com/kubernetes/kubernetes/master/docs/getting-started-guides/docker-multinode/skydns-rc.yaml.in && \
+  wget https://raw.githubusercontent.com/kubernetes/kubernetes/master/docs/getting-started-guides/docker-multinode/skydns-svc.yaml.in
 ```
 
 Next, we need to configure some environment variables, namely `DNS_REPLICAS` , `DNS_DOMAIN` , `DNS_SERVER_IP` , `KUBE_SERVER`. Set the `KUBE_SERVER` variable to the IP address of the **k8s-master** VM.
 
 ```bash
-$ export DNS_REPLICAS=1
-$ export DNS_DOMAIN=cluster.local
-$ export DNS_SERVER_IP=10.0.0.10
-$ export KUBE_SERVER=192.168.109.200
+$ export DNS_REPLICAS=1 && \
+  export DNS_DOMAIN=cluster.local && \
+  export DNS_SERVER_IP=10.0.0.10 && \
+  export KUBE_SERVER=192.168.109.200
 ```
 
 Next we generate the configuration using the templates and the above configuration.
 
 ```bash
-$ sed -e "s/{{ pillar\['dns_replicas'\] }}/${DNS_REPLICAS}/g;s/{{ pillar\['dns_domain'\] }}/${DNS_DOMAIN}/g;s/{kube_server_url}/${KUBE_SERVER}/g;" skydns-rc.yaml.in > ./skydns-rc.yaml
-$ sed -e "s/{{ pillar\['dns_server'\] }}/${DNS_SERVER_IP}/g" skydns-svc.yaml.in > ./skydns-svc.yaml
+$ sed -e "s/{{ pillar\['dns_replicas'\] }}/${DNS_REPLICAS}/g;s/{{ pillar\['dns_domain'\] }}/${DNS_DOMAIN}/g;s/{kube_server_url}/${KUBE_SERVER}/g;" skydns-rc.yaml.in > ./skydns-rc.yaml && \
+  sed -e "s/{{ pillar\['dns_server'\] }}/${DNS_SERVER_IP}/g" skydns-svc.yaml.in > ./skydns-svc.yaml
 ```
 
 Now use `kubectl` to create the `skydns` replication controller.
