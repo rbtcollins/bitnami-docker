@@ -220,7 +220,7 @@ Add a firewall rule named `outbound-ALL` with the `Source` set to `Internal` and
 
 ![gateway_public_ips_list](images/firewall-outbound-ALL.jpg)
 
-You can list the NAT rules using `vca nat` and the firewall rules using `vca firewall`.
+You can list the NAT rules and Firewall rules using `vca nat` and `vca firewall` respectively.
 
 We should now be able to spin up VM's and be assured that they will be able to connect to the internet.
 
@@ -384,7 +384,7 @@ To access the console of the VM, in the vCloud Air web interface:
 If you have enable remote SSH access to the `k8s-master` VM, the you can login to the `k8s-worker-01` VM from the `k8s-master` VM by SSH'ing to `192.168.109.201`:
 
 ```bash
-ssh 192.168.109.201 -l root
+$ ssh 192.168.109.201 -l root
 ```
 
 #### Setting up the worker node
@@ -510,7 +510,7 @@ And there you have it, a Kubernetes cluster running on vCloud Air. You can run f
 Clone the [bitnami-docker](https://github.com/bitnami/bitnami-docker) GitHub repository:
 
 ```bash
-git clone https://github.com/bitnami/bitnami-docker.git
+$ git clone https://github.com/bitnami/bitnami-docker.git
 ```
 
 The files used in this tutorial can be found in the `vcloud/redmine` directory of the cloned repository:
@@ -523,7 +523,7 @@ The files used in this tutorial can be found in the `vcloud/redmine` directory o
 - mariadb-service.yml
 
 ```bash
-cd bitnami-docker/vcloud/redmine/
+$ cd bitnami-docker/vcloud/redmine/
 ```
 
 ## Create the Redmine Docker container image
