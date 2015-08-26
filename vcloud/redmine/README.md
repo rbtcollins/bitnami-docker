@@ -699,7 +699,7 @@ To delete your application completely:
     $ kubectl delete service mariadb
     ```
 
-2. Delete the controller:
+2. Delete the controllers:
 
     ```bash
     $ kubectl delete rc redmine
