@@ -326,16 +326,11 @@ Next install Docker
 $ curl -sSL https://get.docker.com/ | sh
 ```
 
-Now we install the Kubernetes `kubectl` command. Set `K8S_VERSION` to the most recent Kubernetes [release](https://github.com/kubernetes/kubernetes/releases)
+Set `K8S_VERSION` to the most recent Kubernetes [release](https://github.com/kubernetes/kubernetes/releases) and install `kubectl` using:
 
 ```bash
-$ export K8S_VERSION=1.0.3
-```
-
-Install the `kubectl` command.
-
-```bash
-$ wget https://github.com/kubernetes/kubernetes/releases/download/v${K8S_VERSION}/kubernetes.tar.gz && \
+$ export K8S_VERSION=1.0.3 && \
+  wget https://github.com/kubernetes/kubernetes/releases/download/v${K8S_VERSION}/kubernetes.tar.gz && \
   tar xf kubernetes.tar.gz && \
   cp kubernetes/platforms/linux/$(dpkg --print-architecture)/kubectl /usr/local/bin && \
   chmod +x /usr/local/bin/kubectl
@@ -345,8 +340,7 @@ Finally we setup the VM to be the master node of the Kubernetes cluster.
 
 ```bash
 $ wget https://raw.githubusercontent.com/kubernetes/kubernetes/master/docs/getting-started-guides/docker-multinode/master.sh && \
-  chmod +x master.sh && \
-  ./master.sh
+  chmod +x master.sh && ./master.sh
 ```
 
 This process will take a while to complete at the end of which we should have a working Kubernetes master node.
@@ -403,33 +397,22 @@ Next we install Docker, followed by the Kubernetes `kubectl` command.
 $ curl -sSL https://get.docker.com/ | sh
 ```
 
-Set `K8S_VERSION` to the most recent Kubernetes [release](https://github.com/kubernetes/kubernetes/releases)
+Set `K8S_VERSION` to the most recent Kubernetes [release](https://github.com/kubernetes/kubernetes/releases) and install `kubectl` using:
 
 ```bash
-$ export K8S_VERSION=1.0.3
-```
-
-Install the `kubectl` command.
-
-```bash
-$ wget https://github.com/kubernetes/kubernetes/releases/download/v${K8S_VERSION}/kubernetes.tar.gz && \
+$ export K8S_VERSION=1.0.3 && \
+  wget https://github.com/kubernetes/kubernetes/releases/download/v${K8S_VERSION}/kubernetes.tar.gz && \
   tar xf kubernetes.tar.gz && \
   cp kubernetes/platforms/linux/$(dpkg --print-architecture)/kubectl /usr/local/bin && \
   chmod +x /usr/local/bin/kubectl
 ```
 
-Finally we setup the VM as a worker node of the Kubernetes cluster. First set the `MASTER_IP` environment variable to the IP address of the **ks8-master** VM.
+Finally we setup the VM as a worker node of the Kubernetes cluster. First set the `MASTER_IP` environment variable to the IP address of the **ks8-master** VM and setup the worker.
 
 ```bash
-$ export MASTER_IP=192.168.109.200
-```
-
-And begin the install.
-
-```bash
-$ wget https://raw.githubusercontent.com/kubernetes/kubernetes/master/docs/getting-started-guides/docker-multinode/worker.sh && \
-  chmod +x worker.sh && \
-  ./worker.sh
+$ export MASTER_IP=192.168.109.200 && \
+  wget https://raw.githubusercontent.com/kubernetes/kubernetes/master/docs/getting-started-guides/docker-multinode/worker.sh && \
+  chmod +x worker.sh && ./worker.sh
 ```
 
 Like the master node setup, the this process will take a while to complete at the end of which the worker should be ready.
