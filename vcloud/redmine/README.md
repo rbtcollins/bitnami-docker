@@ -103,10 +103,10 @@ $ vca org list-templates
 | dr-d11p16v3-tp   |
 ```
 
-We will use the `d11p16v9-tp` template for our new Kubernetes VDC.
+We will use the `VPC Subscription` template for our new Kubernetes VDC.
 
 ```bash
-$ vca vdc create --vdc Kubernetes --template d11p16v9-tp
+$ vca vdc create --vdc Kubernetes --template 'VPC Subscription'
 ```
 
 Now we can select the Kubernetes VDC using:
