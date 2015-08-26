@@ -13,10 +13,16 @@
         - [Create `k8s-worker-01` VM](#create-k8s-worker-01-vm)
         - [Setting up the worker node](#setting-up-the-worker-node)
 - [Download the configuration files](#download-the-configuration-files)
+- [Create the Docker container images](#create-the-docker-container-images)
+    - [FakeS3 Image](#fakes3-image)
+    - [Redmine Image](#redmine-image)
 - [Create the Redmine Docker container image](#create-the-redmine-docker-container-image)
 - [MariaDB pod and service](#mariadb-pod-and-service)
     - [MariaDB pod](#mariadb-pod)
     - [MariaDB service](#mariadb-service)
+- [FakeS3 pod and service](#fakes3-pod-and-service)
+    - [FakeS3 pod](#fakes3-pod)
+    - [FakeS3 service](#fakes3-service)
 - [Redmine pod and service](#redmine-pod-and-service)
     - [Redmine pod](#redmine-pod)
     - [Redmine service](#redmine-service)
@@ -457,7 +463,7 @@ Wait for the pods to enter the `Running` state.
 ```bash
 $ kubectl -s "$KUBE_SERVER:8080" --namespace=kube-system get pods
 NAME                READY     STATUS    RESTARTS   AGE
-kube-dns-v8-rh7lz   4/4       Running   0          2m
+kube-dns-v8-hm08a   4/4       Running   1          1m
 ```
 
 Once the pods are in the `Running` state, create the `skydns` service using `kubectl`.
@@ -500,6 +506,10 @@ The files used in this tutorial can be found in the `vcloud/redmine` directory o
 
 - dockerfiles/redmine/Dockerfile
 - dockerfiles/redmine/run.sh
+- dockerfiles/fakes3/Dockerfile
+- dockerfiles/fakes3/run.sh
+- fakes3-controller.yml
+- fakes3-service.yml
 - redmine-controller.yml
 - redmine-service.yml
 - mariadb-controller.yml
@@ -509,15 +519,32 @@ The files used in this tutorial can be found in the `vcloud/redmine` directory o
 $ cd bitnami-docker/vcloud/redmine/
 ```
 
-## Create the Redmine Docker container image
+## Create the Docker container images
 
-The Redmine image is built using the `Dockerfile` and `run.sh` script from the `dockerfiles/redmine/` directory. Docker container images can extend from other existing images so for this image, we'll extend from the existing `bitnami/ruby` image.
+### FakeS3
 
-The `Dockerfile` imports the correct Redmine source code and a `run.sh` script.
+The FakeS3 image is built using the `Dockerfile` from the `dockerfiles/fakes3/` directory. Docker container images can extend from other existing images, for this image we extend the existing `bitnami/ruby` image.
 
-The `run.sh` script uses the MariaDB connection information exposed by docker links and automatically configures the Redmine database connection parameters.
+Build the image by running:
 
-Build the Redmine image by running:
+```bash
+$ cd dockerfiles/fakes3/
+$ docker build -t <dockerhub-account-name>/fakes3 .
+```
+
+Then push this image to the Docker Hub Registry:
+
+```bash
+$ docker push <dockerhub-account-name>/fakes3
+```
+
+### Redmine
+
+The Redmine image is built using the `Dockerfile` and `run.sh` script from the `dockerfiles/redmine/` directory. Like the fakes3 image, this image extends the existing `bitnami/ruby` image.
+
+The `Dockerfile` imports the correct Redmine source code and a `run.sh` script. The `run.sh` script uses the MariaDB connection information exposed by docker links and automatically configures the Redmine database connection parameters.
+
+Build the image by running:
 
 ```bash
 $ cd dockerfiles/redmine/
@@ -551,7 +578,7 @@ Check to see if the pod is running. It may take a minute to change from `Pending
 ```bash
 $ kubectl get pods -l name=mariadb
 NAME            READY     STATUS    RESTARTS   AGE
-mariadb-izq2p   1/1       Running   0          5m
+mariadb-lfwob   1/1       Running   0          24s
 ```
 
 ### MariaDB service
@@ -574,9 +601,71 @@ See it running:
 
 ```bash
 $ kubectl get services mariadb
-NAME      LABELS         SELECTOR       IP(S)        PORT(S)
-mariadb   name=mariadb   name=mariadb   10.0.0.143   3306/TCP
+NAME      LABELS         SELECTOR       IP(S)       PORT(S)
+mariadb   name=mariadb   name=mariadb   10.0.0.51   3306/TCP
 ```
+
+## FakeS3 pod and service
+
+Now that you have the database up and running, lets set up the FakeS3 server.
+
+### FakeS3 pod
+
+The controller and its pod template is described in the file `fakes3-controller.yml`.
+
+Using this file, you can start your FakeS3 servers with:
+
+```bash
+$ kubectl create -f fakes3-controller.yml
+```
+
+Check to see if the pods are running. It may take a few minutes to change from `Pending` to `Running`:
+
+```bash
+$ kubectl get pods -l name=fakes3
+NAME           READY     STATUS    RESTARTS   AGE
+fakes3-s76fi   1/1       Running   0          40s
+```
+
+### FakeS3 service
+
+As with the MariaDB pod, we want a service to group the FakeS3 server pods. However, this time it's different: this service is user-facing, so we want it to be externally visible. That is, we want a client to be able to request the service from outside the cluster. To accomplish this, we can set the `type: NodePort` field and specify `nodePort: 30001` in the service configuration.
+
+The service specification for the FakeS3 is in `fakes3-service.yml`.
+
+```bash
+$ kubectl create -f fakes3-service.yml
+```
+
+See it running:
+
+```bash
+$ kubectl get services fakes3
+NAME      LABELS        SELECTOR      IP(S)       PORT(S)
+fakes3    name=fakes3   name=fakes3   10.0.0.63   8080/TCP
+```
+
+## Allow external traffic
+
+By default, the pod is only accessible by its internal IP within the cluster. In order to make the FakeS3 service accessible from the Internet we have to open port `8080` and forward it to port `30001` of our master node.
+
+For this we need to add some NAT and Firewall rules. To add the NAT rule:
+
+```bash
+$ vca nat add --type dnat \
+    --original-ip $EXTERNAL_IP --original-port 8080 \
+    --translated-ip 192.168.109.200 --translated-port 30001 --protocol tcp
+```
+
+To add the firewall rule, again, we need to do it from the vCloud Air web interface.
+
+1. On the left sidebar, click on the **Kubernetes** VDC
+2. Goto **Gateways > Gateway on Kubernetes > Firewall Rules**
+3. Click on the **Add** button
+
+Add a firewall rule named `inbound-HTTP` with the `Protocol` set to `TCP`, `Source` to `External`, `Source Port` as `Any`, `Destination` set as `Specific CIDR, IP, or IP Range` and specify the public IP address from the `EXTERNAL_IP` variable and finally set the `Destination Port` as `8080`.
+
+![firewall-inbound-HTTP](images/firewall-inbound-8080.jpg)
 
 ## Redmine pod and service
 
@@ -601,9 +690,9 @@ Check to see if the pods are running. It may take a few minutes to change from `
 ```bash
 $ kubectl get pods -l name=redmine
 NAME            READY     STATUS    RESTARTS   AGE
-redmine-8qqfv   1/1       Running   0          5m
-redmine-tc4oi   1/1       Running   0          5m
-redmine-xj3mh   1/1       Running   0          5m
+redmine-6gw3x   1/1       Running   1          59s
+redmine-glabv   1/1       Running   1          59s
+redmine-sup3e   1/1       Running   0          59s
 ```
 
 Once the servers are up, you can list the pods in the cluster, to verify that they're all running:
@@ -611,18 +700,19 @@ Once the servers are up, you can list the pods in the cluster, to verify that th
 ```bash
 $ kubectl get pods
 NAME                   READY     STATUS    RESTARTS   AGE
-k8s-master-127.0.0.1   3/3       Running   0          1d
-mariadb-izq2p          1/1       Running   0          32m
-redmine-8qqfv          1/1       Running   0          6m
-redmine-tc4oi          1/1       Running   0          6m
-redmine-xj3mh          1/1       Running   0          6m
+fakes3-s76fi           1/1       Running   0          7m
+k8s-master-127.0.0.1   3/3       Running   0          13m
+mariadb-lfwob          1/1       Running   0          8m
+redmine-6gw3x          1/1       Running   1          1m
+redmine-glabv          1/1       Running   1          1m
+redmine-sup3e          1/1       Running   0          1m
 ```
 
-You'll see a single MariaDB pod and three Redmine pods and some infrastructure pods. In [Scaling the Redmine application](#scaling-the-redmine-application) we will see how we can scale the Redmine pods.
+You'll see a single MariaDB pod, a FakeS3 pod, three Redmine pods and some infrastructure pods. In [Scaling the Redmine application](#scaling-the-redmine-application) we will see how we can scale the Redmine pods.
 
 ### Redmine service
 
-As with the MariaDB pod, we want a service to group the Redmine server pods. However, this time it's different: this service is user-facing, so we want it to be externally visible. That is, we want a client to be able to request the service from outside the cluster. To accomplish this, we can set the `type: NodePort` field and specify `nodePort: 30000` in the service configuration.
+As with the other pods, we want a service to group the Redmine server pods and like the FakeS3 service, this service is also user-facing, so we want it to be externally visible. We can set the `type: NodePort` field and specify `nodePort: 30000` in the service configuration.
 
 The service specification for the Redmine is in `redmine-service.yml`.
 
@@ -635,12 +725,12 @@ See it running:
 ```bash
 $ kubectl get services redmine
 NAME      LABELS         SELECTOR       IP(S)        PORT(S)
-redmine   name=redmine   name=redmine   10.0.0.226   80/TCP
+redmine   name=redmine   name=redmine   10.0.0.242   80/TCP
 ```
 
 ## Allow external traffic
 
-By default, the pod is only accessible by its internal IP within the cluster. In order to make the Redmine service accessible from the Internet we have to open port 80 and forward it to port `30000` (`nodePort`) of our master node.
+In order to make the Redmine service accessible from the Internet we have to open port `80` and forward it to port `30000` (`nodePort`) of our master node.
 
 For this we need to add some NAT and Firewall rules. To add the NAT rule:
 
@@ -662,7 +752,17 @@ Add a firewall rule named `inbound-HTTP` with the `Protocol` set to `TCP`, `Sour
 
 ## Access your Redmine server
 
-Now that the firewall is open, you can access the service using the public IP address (`EXTERNAL_IP`) of your gateway. Visit `http://x.x.x.x` where `x.x.x.x` is the public IP address of the gateway from the [Network Configuration](#network-configuration) section.
+Now that the firewall is open, you can access the service using the public IP address (`EXTERNAL_IP`) of your gateway. But first we need to add some DNS entries so that the files in the S3 bucket can be accessed by the users. Ideally this configuration should be done on the DNS server, but for the sake of our tutorial we will add entries in our `/etc/hosts`.
+
+Append the following line into your `/etc/hosts` file.
+
+```
+x.x.x.x redmine.example.com redmine.s3.example.com
+```
+
+*Replace x.x.x.x with the value of the `EXTERNAL_IP` variable*
+
+Now you can visit `http://redmine.example.com` and start using the Redmine application.
 
 ## Scaling the Redmine application
 
@@ -677,11 +777,11 @@ The configuration for the redmine controller will be updated, to specify that th
 ```bash
 $ kubectl get pods -l name=redmine
 NAME            READY     STATUS    RESTARTS   AGE
-redmine-8qqfv   1/1       Running   0          1h
-redmine-lrvbu   1/1       Running   0          22s
-redmine-tc4oi   1/1       Running   0          1h
-redmine-w34sq   1/1       Running   0          22s
-redmine-xj3mh   1/1       Running   0          1h
+redmine-4cus4   1/1       Running   0          17s
+redmine-6gw3x   1/1       Running   1          5m
+redmine-glabv   1/1       Running   1          5m
+redmine-njeig   0/1       Running   0          17s
+redmine-sup3e   1/1       Running   0          5m
 ```
 
 You can scale down the number of Redmine pods in the same manner.
@@ -696,6 +796,7 @@ To delete your application completely:
 
     ```bash
     $ kubectl delete service redmine
+    $ kubectl delete service fakes3
     $ kubectl delete service mariadb
     ```
 
@@ -703,6 +804,7 @@ To delete your application completely:
 
     ```bash
     $ kubectl delete rc redmine
+    $ kubectl delete rc fakes3
     $ kubectl delete rc mariadb
     ```
 

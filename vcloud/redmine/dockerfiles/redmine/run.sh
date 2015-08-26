@@ -34,6 +34,31 @@ if [[ -z ${DATABASE_HOST} || -z ${DATABASE_NAME} || \
   exit 1
 fi
 
+# s3 / google cloud storage configuration (uploads)
+S3_SSL=${S3_SSL:-true}
+S3_ACCESS_KEY_ID=${S3_ACCESS_KEY_ID:-}
+S3_SECRET_ACCESS_KEY=${S3_SECRET_ACCESS_KEY:-}
+S3_BUCKET=${S3_BUCKET:-}
+S3_ENDPOINT=${S3_ENDPOINT:-storage.googleapis.com}
+
+# lookup S3_ACCESS_KEY_ID configuration in secrets volume
+if [[ -z ${S3_ACCESS_KEY_ID} && -f /etc/redmine-secrets/s3-access-key-id ]]; then
+  S3_ACCESS_KEY_ID=$(cat /etc/redmine-secrets/s3-access-key-id)
+fi
+
+# lookup S3_SECRET_ACCESS_KEY configuration in secrets volume
+if [[ -z ${S3_SECRET_ACCESS_KEY} && -f /etc/redmine-secrets/s3-secret-access-key ]]; then
+  S3_SECRET_ACCESS_KEY=$(cat /etc/redmine-secrets/s3-secret-access-key)
+fi
+
+if [[ -z ${S3_ACCESS_KEY_ID} || -z ${S3_SECRET_ACCESS_KEY} ||
+      -z ${S3_BUCKET} || -z ${S3_ENDPOINT} ]]; then
+  echo "ERROR: "
+  echo "  Please configure a s3 / google cloud storage bucket."
+  echo "  Cannot continue. Aborting..."
+  exit 1
+fi
+
 # configure redmine database connection settings
 cat > config/database.yml <<EOF
 production:
@@ -45,10 +70,34 @@ production:
   encoding: utf8
 EOF
 
+# configure cloud storage settings
+cat > config/s3.yml <<EOF
+production:
+  access_key_id: ${S3_ACCESS_KEY_ID}
+  secret_access_key: ${S3_SECRET_ACCESS_KEY}
+  bucket: ${S3_BUCKET}
+  endpoint: ${S3_ENDPOINT}
+EOF
+
 # create the secret session token file
 cat > config/initializers/secret_token.rb <<EOF
 RedmineApp::Application.config.secret_key_base = '${REDMINE_SESSION_TOKEN}'
 EOF
+
+## HACK1: to get fakes3 working on port 8080 or any non standard port.
+# TODO: move this to redmine_s3 plugin
+if [ "$S3_SSL" != "true" ]; then
+  S3_PORT=${S3_PORT:-443}
+else
+  S3_PORT=${S3_PORT:-80}
+fi
+sed -i 's/AWS.config(:ssl_verify_peer => false)/AWS.config(:ssl_verify_peer => false, :use_ssl => '"$S3_SSL"', :s3_port => '"$S3_PORT"')/g' \
+    plugins/redmine_s3/lib/redmine_s3/connection.rb
+
+# HACK2: Create /etc/hosts entry to the fakes3 service
+if [ -n "$FAKES3_SERVICE_HOST" ]; then
+  echo "$FAKES3_SERVICE_HOST $S3_BUCKET.$S3_ENDPOINT $S3_ENDPOINT" | sudo tee -a /etc/hosts
+fi
 
 echo "Running database migrations..."
 bundle exec rake db:migrate RAILS_ENV=production

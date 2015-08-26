@@ -25,6 +25,18 @@ spec:
               value: secretpassword
             - name: REDMINE_SESSION_TOKEN
               value: mCjVXBV6jZVn9RCKsHZFGBcVmpQd8l9s
+            - name: S3_ACCESS_KEY_ID
+              value: fake-s3-not-required
+            - name: S3_SECRET_ACCESS_KEY
+              value: fake-s3-not-required
+            - name: S3_BUCKET
+              value: redmine
+            - name: S3_ENDPOINT
+              value: s3.example.com
+            - name: S3_PORT
+              value: "8080"
+            - name: S3_SSL
+              value: "false"
           ports:
             - containerPort: 3000
               protocol: TCP

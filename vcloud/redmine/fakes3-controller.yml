@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: fakes3
+  labels:
+    name: fakes3
+spec:
+  replicas: 1
+  selector:
+    name: fakes3
+  template:
+    metadata:
+      labels:
+        name: fakes3
+    spec:
+      containers:
+        - name: fakes3
+          image: tutorials/fakes3
+          ports:
+            - containerPort: 8080
+              name: fakes3
