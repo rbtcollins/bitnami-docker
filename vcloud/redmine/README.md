@@ -498,8 +498,8 @@ $ git clone https://github.com/bitnami/bitnami-docker.git
 
 The files used in this tutorial can be found in the `vcloud/redmine` directory of the cloned repository:
 
-- Dockerfile
-- run.sh
+- dockerfiles/redmine/Dockerfile
+- dockerfiles/redmine/run.sh
 - redmine-controller.yml
 - redmine-service.yml
 - mariadb-controller.yml
@@ -511,7 +511,7 @@ $ cd bitnami-docker/vcloud/redmine/
 
 ## Create the Redmine Docker container image
 
-The Redmine image is built using the `Dockerfile` and `run.sh` script. Docker container images can extend from other existing images so for this image, we'll extend from the existing `bitnami/ruby` image.
+The Redmine image is built using the `Dockerfile` and `run.sh` script from the `dockerfiles/redmine/` directory. Docker container images can extend from other existing images so for this image, we'll extend from the existing `bitnami/ruby` image.
 
 The `Dockerfile` imports the correct Redmine source code and a `run.sh` script.
 
@@ -520,6 +520,7 @@ The `run.sh` script uses the MariaDB connection information exposed by docker li
 Build the Redmine image by running:
 
 ```bash
+$ cd dockerfiles/redmine/
 $ docker build -t <dockerhub-account-name>/redmine .
 ```
 
