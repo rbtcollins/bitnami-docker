@@ -375,10 +375,10 @@ To access the console of the VM, in the vCloud Air web interface:
 2. Goto **Virtual Machines > k8s-worker-01 > Settings**
 3. Click on the **Open Virtual Machine Console** link
 
-If you have enable remote SSH access to the `k8s-master` VM, the you can login to the `k8s-worker-01` VM from the `k8s-master` VM by SSH'ing to `192.168.109.201`:
+If you have enabled remote SSH access to the `k8s-master` VM, then you can SSH into `k8s-worker-01` from `k8s-master` using:
 
 ```bash
-$ ssh 192.168.109.201 -l root
+$ ssh $EXTERNAL_IP -tl root ssh 192.168.109.201 -l root
 ```
 
 #### Setting up the worker node
