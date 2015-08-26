@@ -29,6 +29,7 @@
 - [Allow external traffic](#allow-external-traffic)
 - [Access your Redmine server](#access-your-redmine-server)
 - [Scaling the Redmine application](#scaling-the-redmine-application)
+- [Take down and restart Redmine](#take-down-and-restart-redmine)
 - [Cleanup](#cleanup)
 
 This tutorial walks through setting up a scalable [Redmine](http://redmine.org) installation on VMware vCloud Air using the [Bitnami Container Images](https://bitnami.com/docker) for Docker and deployed using Kubernetes. If you're just looking for the quickest way to get Redmine up and running you might prefer our [prebuilt installers, VMs and Cloud Images](http://www.bitnami.com/stack/redmine). If you're interested in getting hands on with [Kubernetes](http://kubernetes.io) and [vCloud Air](https://vcloud.vmware.com), read on....
@@ -791,6 +792,30 @@ redmine-sup3e   1/1       Running   0          5m
 ```
 
 You can scale down the number of Redmine pods in the same manner.
+
+## Take down and restart Redmine
+
+Because we used a FakeS3 storage for files uploaded in Redmine, your Redmine state is preserved even when the pods it's running on are deleted. Lets try it.
+
+```bash
+$ kubectl delete rc redmine
+```
+
+*Deleting the replication controller also deletes its pods.*
+
+Confirm that the pods have been deleted:
+
+```bash
+$ kubectl get pods
+```
+
+Then re-create the pods:
+
+```bash
+$ kubectl create -f redmine-controller.yml
+```
+
+Once the pods have restarted, the `redmine` service picks them up immediately based on their labels, and your Redmine application is restored.
 
 ## Cleanup
 
