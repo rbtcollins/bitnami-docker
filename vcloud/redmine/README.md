@@ -180,6 +180,16 @@ $ vca network delete -n default-routed-network && \
 
 Now if you list the existing networks using `vca network`, you will notice that the DNS server addresses are configured on `default-routed-network`.
 
+If you decided to use an existing VDC, configure the DNS addresses on the `default-routed-network` using the vCloud Director interface. To do this in to the vCloud Air interface:
+
+1. On the left sidebar, click on the the VDC
+2. Goto **Networks**
+3. Click on the **Manage in vCloud Director** link
+4. In vCloud Director, load the `default-routed-network` **Properties**
+5. Update the DNS settings of the network
+
+![vcloud-director-network-properties](images/vcloud-director-network-properties.jpg)
+
 Next we need to add a public IP address to the gateway interface of the VDC using:
 
 ```bash
