@@ -573,7 +573,9 @@ The first thing that we're going to do is start a [pod](http://kubernetes.io/v1.
 
 We'll use the config file `mariadb-controller.yml` for the database pod. The pod definition creates a single MariaDB pod.
 
-> **Note**: You should change the value of the `MARIADB_PASSWORD` env variable to one of your choosing.
+> **Note**:
+>
+> You should change the value of the `MARIADB_PASSWORD` env variable to one of your choosing. You will also need configure the `DATABASE_PASSWORD` in the [Redmine pod](#redmine-pod) with the same value.
 
 To create the pod:
 
@@ -622,6 +624,7 @@ FakeS3 is a lightweight server clone of Amazon S3 that simulates most of the com
 The controller and its pod template is described in the file `fakes3-controller.yml`.
 
 > **Note**:
+>
 > Change the image name to `<dockerhub-account-name>/fakes3` as per the build instructions in [FakeS3 Image](#fakes3-image).
 
 Using this file, you can start the FakeS3 server with:
@@ -666,14 +669,15 @@ Now that you have the database up and running, lets set up the Redmine web serve
 
 The controller and its pod template is described in the file `redmine-controller.yml`.
 
-> **Note**:
+> **Note**
+>
 > 1. Change the image name to `<dockerhub-account-name>/redmine` as per the build instructions in [Redmine Image](#redmine-image)
 >
 > 2. Change the value of `DATABASE_PASSWORD` with the one specified for `MARIADB_PASSWORD` in `mariadb-controller.yml`
 >
 > 3. Change the value of `REDMINE_SESSION_TOKEN` to a alphanumeric string of your choosing.
 >
-> 4. Change the values of `S3_ENDPOINT`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` and `S3_BUCKET` if you are using Amazon S3 or some other S3 compatible service instead of FakeS3. Also remove the `S3_PORT` and `S3_SSL` env variables in this case.
+> 4. In you are using Amazon S3 or some other S3 compatible service instead of FakeS3, change the values of `S3_ENDPOINT`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` and `S3_BUCKET`. Also remove the `S3_PORT` and `S3_SSL` env variables in this case.
 
 It specifies 3 replicas of the server. Using this file, you can start your Redmine servers with:
 
