@@ -333,7 +333,7 @@ In this firewall rule, we are opening TCP port `22` on the gateway.
 With this configuration in place, you should be able to login to the **k8s-master** VM using an SSH client.
 
 ```bash
-$ ssh $EXTERNAL_IP -l root
+$ ssh root@$EXTERNAL_IP
 ```
 
 Login using the `admin_password` displayed in the output of the `vca vapp info -a k8s-master-VApp -V k8s-master` command.
@@ -406,7 +406,7 @@ You can access the console of the VM from the vCloud Air web interface:
 If you have enabled remote SSH access to the `k8s-master` VM by following the instructions from [Allow remote SSH connections (Optional)](#allow-remote-ssh-connections-optional), then you can SSH into `k8s-worker-01` using:
 
 ```bash
-$ ssh $EXTERNAL_IP -tl root ssh 192.168.109.201 -l root
+$ ssh -t root@$EXTERNAL_IP ssh root@192.168.109.201
 ```
 
 #### Setting up the worker node
