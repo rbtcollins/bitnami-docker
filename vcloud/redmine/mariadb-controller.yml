@@ -1,0 +1,35 @@
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: mariadb
+  labels:
+    name: mariadb
+spec:
+  replicas: 1
+  selector:
+    name: mariadb
+  template:
+    metadata:
+      labels:
+        name: mariadb
+    spec:
+      containers:
+        - name: mariadb
+          image: bitnami/mariadb:5.5.45-0
+          args:
+            - --max_connect_errors=1000
+          env:
+            - name: MARIADB_DATABASE
+              value: redmine_production
+            - name: MARIADB_USER
+              value: redmine
+            - name: MARIADB_PASSWORD
+              value: secretpassword
+          ports:
+            - containerPort: 3306
+              name: mariadb
+          livenessProbe:
+            TCPSocket:
+              port: 3306
+            initialDelaySeconds: 30
+            timeoutSeconds: 1

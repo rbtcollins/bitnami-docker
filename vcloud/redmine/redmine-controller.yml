@@ -1,0 +1,48 @@
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: redmine
+  labels:
+    name: redmine
+spec:
+  replicas: 3
+  selector:
+    name: redmine
+  template:
+    metadata:
+      labels:
+        name: redmine
+    spec:
+      containers:
+        - name: redmine
+          image: tutorials/redmine
+          env:
+            - name: DATABASE_NAME
+              value: redmine_production
+            - name: DATABASE_USER
+              value: redmine
+            - name: DATABASE_PASSWORD
+              value: secretpassword
+            - name: REDMINE_SESSION_TOKEN
+              value: mCjVXBV6jZVn9RCKsHZFGBcVmpQd8l9s
+            - name: S3_ACCESS_KEY_ID
+              value: fake-s3-not-required
+            - name: S3_SECRET_ACCESS_KEY
+              value: fake-s3-not-required
+            - name: S3_BUCKET
+              value: redmine
+            - name: S3_ENDPOINT
+              value: s3.example.com
+            - name: S3_PORT
+              value: "8080"
+            - name: S3_SSL
+              value: "false"
+          ports:
+            - containerPort: 3000
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 30
+            timeoutSeconds: 1
