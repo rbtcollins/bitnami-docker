@@ -186,7 +186,7 @@ $ vca network delete -n default-routed-network && \
 
 Now if you list the existing networks using `vca network`, you will notice that the DNS server addresses are configured on `default-routed-network`.
 
-> If you decided to use an existing VDC, configure the DNS addresses on the `default-routed-network` using the vCloud Director interface. To do this in to the vCloud Air interface:
+> If you decided to use an existing VDC, configure the DNS addresses on the `default-routed-network` using the vCloud Director interface. In the vCloud Air interface:
 >
 > 1. On the left sidebar, click on the the VDC
 > 2. Goto **Networks**
@@ -202,7 +202,9 @@ Next we need to add a public IP address to the gateway interface of the VDC usin
 $ vca gateway add-ip
 ```
 
-**Note**: You will be charged for this IP Address.
+> **Note**:
+>
+> You will be charged for this IP address.
 
 We can get the details of the gateway using:
 
@@ -567,7 +569,7 @@ In this section we will build the Docker images for the FakeS3 and Redmine appli
 
 FakeS3 mimics the API of the Amazon S3 service and provides our Redmine application with a centralized object store that is shared among all the Redmine pods.
 
-Since the user file uploads are centralized at single location, it enables us to have more than on Redmine instance thereby allowing use to scale the Redmine application horizontally.
+Since the user file uploads are centralized at single location, it enables us to have more than one Redmine instance thereby allowing use to scale the Redmine application horizontally.
 
 The FakeS3 image is built using the `Dockerfile` from the `dockerfiles/fakes3/` directory. Docker container images can extend from other existing images, for this image we extend the existing `bitnami/ruby` image.
 
