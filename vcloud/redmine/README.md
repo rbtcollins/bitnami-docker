@@ -685,6 +685,10 @@ In the [Allow external traffic](#allow-external-traffic) section, we will be map
 >
 > If you want to use port `80` for the FakeS3 service as well, then you would have either add a reverse proxy service to the cluster or add another public IP address (for which you would be charged).
 
+> **Note**:
+>
+> The FakeS3 does not require any authentication and as the service is exposed outside the cluster, it leaves the service vulnerable. If you intend to use this setup in production you should rather use the Amazon S3 or a compatible service such as the Google Cloud Storage service.
+
 The service specification for the FakeS3 is in `fakes3-service.yml`.
 
 ```bash
