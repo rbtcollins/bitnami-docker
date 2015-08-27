@@ -573,7 +573,7 @@ The first thing that we're going to do is start a [pod](http://kubernetes.io/v1.
 
 We'll use the config file `mariadb-controller.yml` for the database pod. The pod definition creates a single MariaDB pod.
 
-> **Note**": You should change the value of the `MARIADB_PASSWORD` env variable to one of your choosing.
+> **Note**: You should change the value of the `MARIADB_PASSWORD` env variable to one of your choosing.
 
 To create the pod:
 
