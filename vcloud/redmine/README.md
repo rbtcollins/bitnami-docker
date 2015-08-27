@@ -16,7 +16,6 @@
 - [Create the Docker container images](#create-the-docker-container-images)
     - [FakeS3 Image](#fakes3-image)
     - [Redmine Image](#redmine-image)
-- [Create the Redmine Docker container image](#create-the-redmine-docker-container-image)
 - [MariaDB pod and service](#mariadb-pod-and-service)
     - [MariaDB pod](#mariadb-pod)
     - [MariaDB service](#mariadb-service)
