@@ -65,6 +65,12 @@ $ vca --version
 vca-cli version 14 (pyvcloud: 14)
 ```
 
+If you see `insecureplatformwarning` warnings while executing `vca`, install the `requests[security]` python package using:
+
+```bash
+$ pip install requests[security]
+```
+
 ## Create your cluster
 
 Before you get to creating the Kubernetes cluster, we need to login to vCloud Air using the `vca` tool.
