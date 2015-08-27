@@ -1,4 +1,4 @@
-FROM bitnami/ruby:2.2.3-0
+FROM bitnami/ruby:2.2.3-0-r01
 
 USER root
 RUN gem install fakes3
