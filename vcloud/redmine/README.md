@@ -338,6 +338,34 @@ $ ssh root@$EXTERNAL_IP
 
 Login using the `admin_password` displayed in the output of the `vca vapp info -a k8s-master-VApp -V k8s-master` command.
 
+For optimal security, it is recommended that you use SSH Keys for logging into the VM, rather than using passwords. If you do not already have a RSA key pair, you can generate one using:
+
+```bash
+$ ssh-keygen -t rsa
+```
+
+Copy your public key into the `/root/.ssh/authorized_keys` file of the VM using:
+
+```bash
+$ ssh-copy-id root@$EXTERNAL_IP
+```
+
+To further secure your server you can disable password authentication for SSH. Once logged into the VM, edit the `/etc/ssh/sshd_config` and update/add the following settings to these values.
+
+```
+ChallengeResponseAuthentication no
+PasswordAuthentication no
+UsePAM no
+```
+
+Restart the SSH server for these settings to take effect using:
+
+```bash
+$ restart ssh
+```
+
+From this point on, you will not be able to access the VM over SSH using passwords.
+
 #### Setting up the master node
 
 Begin by updating the system packages.
