@@ -186,6 +186,8 @@ Next we need to add a public IP address to the gateway interface of the VDC usin
 $ vca gateway add-ip
 ```
 
+**Note**: You will be charged for this IP Address.
+
 We can get the details of the gateway using:
 
 ```bash
