@@ -555,7 +555,13 @@ $ cd bitnami-docker/vcloud/redmine/
 
 ## Create the Docker container images
 
+In this section we will build the Docker images for the FakeS3 and Redmine applications.
+
 ### FakeS3
+
+FakeS3 mimics the API of the Amazon S3 service and provides our Redmine application with a centralized object store that is shared among all the Redmine pods.
+
+Since the user file uploads are centralized at single location, it enables us to have more than on Redmine instance thereby allowing use to scale the Redmine application horizontally.
 
 The FakeS3 image is built using the `Dockerfile` from the `dockerfiles/fakes3/` directory. Docker container images can extend from other existing images, for this image we extend the existing `bitnami/ruby` image.
 
@@ -672,6 +678,12 @@ fakes3-s76fi   1/1       Running   0          40s
 ### FakeS3 service
 
 As with the MariaDB pod, we want a service to group the FakeS3 server pods. However, this time it's different: this service is user-facing, so we want it to be externally visible. That is, we want a client to be able to request the service from outside the cluster. To accomplish this, we can set the `type: NodePort` field and specify `nodePort: 30001` in the service configuration.
+
+In the [Allow external traffic](#allow-external-traffic) section, we will be mapping the port `8080` to reach our FakeS3 service. We use port `8080` because we will be mapping port `80` to reach our Redmine service.
+
+> **Tip**:
+>
+> If you want to use port `80` for the FakeS3 service as well, then you would have either add a reverse proxy service to the cluster or add another public IP address (for which you would be charged).
 
 The service specification for the FakeS3 is in `fakes3-service.yml`.
 
