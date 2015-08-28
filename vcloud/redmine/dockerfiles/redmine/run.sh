@@ -35,7 +35,7 @@ if [[ -z ${DATABASE_HOST} || -z ${DATABASE_NAME} || \
 fi
 
 # s3 / google cloud storage configuration (uploads)
-S3_SSL=${S3_SSL:-true}
+S3_SSL=${S3_SSL:-}
 S3_ACCESS_KEY_ID=${S3_ACCESS_KEY_ID:-}
 S3_SECRET_ACCESS_KEY=${S3_SECRET_ACCESS_KEY:-}
 S3_BUCKET=${S3_BUCKET:-}
@@ -77,6 +77,8 @@ production:
   secret_access_key: ${S3_SECRET_ACCESS_KEY}
   bucket: ${S3_BUCKET}
   endpoint: ${S3_ENDPOINT}
+  port: ${S3_PORT}
+  ssl: ${S3_SSL}
 EOF
 
 # create the secret session token file
@@ -84,17 +86,7 @@ cat > config/initializers/secret_token.rb <<EOF
 RedmineApp::Application.config.secret_key_base = '${REDMINE_SESSION_TOKEN}'
 EOF
 
-## HACK1: to get fakes3 working on port 8080 or any non standard port.
-# TODO: move this to redmine_s3 plugin
-if [ "$S3_SSL" != "true" ]; then
-  S3_PORT=${S3_PORT:-443}
-else
-  S3_PORT=${S3_PORT:-80}
-fi
-sed -i 's/AWS.config(:ssl_verify_peer => false)/AWS.config(:ssl_verify_peer => false, :use_ssl => '"$S3_SSL"', :s3_port => '"$S3_PORT"')/g' \
-    plugins/redmine_s3/lib/redmine_s3/connection.rb
-
-# HACK2: Create /etc/hosts entry to the fakes3 service
+# HACK: Create /etc/hosts entry to the fakes3 service
 if [ -n "$FAKES3_SERVICE_HOST" ]; then
   echo "$FAKES3_SERVICE_HOST $S3_BUCKET.$S3_ENDPOINT $S3_ENDPOINT" | sudo tee -a /etc/hosts
 fi

@@ -3,7 +3,7 @@ ENV REDMINE_VERSION=3.1.0
 
 RUN curl -L http://www.redmine.org/releases/redmine-${REDMINE_VERSION}.tar.gz \
       -o /tmp/redmine-${REDMINE_VERSION}.tar.gz \
- && curl -L https://github.com/ka8725/redmine_s3/archive/master.tar.gz \
+ && curl -L https://github.com/sameersbn/redmine_s3/archive/master.tar.gz \
       -o /tmp/redmine_s3.tar.gz \
  && mkdir -p /home/$BITNAMI_APP_USER/redmine/ \
  && tar -xf /tmp/redmine-${REDMINE_VERSION}.tar.gz --strip=1 -C /home/$BITNAMI_APP_USER/redmine/ \
