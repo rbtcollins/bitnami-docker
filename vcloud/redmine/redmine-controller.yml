@@ -40,7 +40,7 @@ spec:
           ports:
             - containerPort: 3000
               protocol: TCP
-              name: fakes3
+              name: redmine
           livenessProbe:
             httpGet:
               path: /
