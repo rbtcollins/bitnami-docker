@@ -27,6 +27,7 @@ spec:
               value: secretpassword
           ports:
             - containerPort: 3306
+              protocol: TCP
               name: mariadb
           livenessProbe:
             TCPSocket:
