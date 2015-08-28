@@ -30,6 +30,10 @@
 - [Scaling the Redmine application](#scaling-the-redmine-application)
 - [Take down and restart Redmine](#take-down-and-restart-redmine)
 - [Cleanup](#cleanup)
+- [Possible improvements](#possible-improvements)
+    - [Use secret volume to store sensitive information](#use-secret-volume-to-store-sensitive-information)
+    - [Use persistent volumes for MariaDB and Fakes3 controllers](#use-persistent-volumes-for-mariadb-and-fakes3-controllers)
+    - [Add health checks to FakeS3 controller](#add-health-checks-to-fakes3-controller)
 
 This tutorial walks through setting up a scalable [Redmine](http://redmine.org) installation on VMware vCloud Air using the [Bitnami Container Images](https://bitnami.com/docker) for Docker and deployed using Kubernetes. If you're just looking for the quickest way to get Redmine up and running you might prefer our [prebuilt installers, VMs and Cloud Images](http://www.bitnami.com/stack/redmine). If you're interested in getting hands on with [Kubernetes](http://kubernetes.io) and [vCloud Air](https://vcloud.vmware.com), read on....
 
@@ -912,3 +916,25 @@ To delete your application completely:
     $ vca vdc delete --vdc Kubernetes
     ```
 
+## Possible improvements
+
+### Use secret volume to store sensitive information
+
+A [secret key store](http://kubernetes.io/v1.0/docs/user-guide/secrets.html) is intended to hold sensitive information such as passwords, access keys, etc. Having this information in a key store is safer and more flexible then putting it in to our pod definition.
+
+## Use persistent volumes for MariaDB and Fakes3 controllers
+
+For the MariaDB and FakeS3 services to preverse their state across pod shutdown and startup we should make use of [volumes](http://kubernetes.io/v1.0/docs/user-guide/volumes.html).
+
+## Add health checks to FakeS3 controller
+
+Health checks allow Kubernetes to check the health of pods in a replication controller and take corrective action on failures. The following health check on the FakeS3 replication controller seem to cause the fakes3 service to error out:
+
+```yaml
+livenessProbe:
+    httpGet:
+        path: /
+        port: 8080
+    initialDelaySeconds: 30
+    timeoutSeconds: 1
+```
