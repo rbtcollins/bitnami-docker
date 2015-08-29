@@ -27,7 +27,7 @@ spec:
             - containerPort: 3000
               protocol: TCP
           volumeMounts:
-            - name: secrets
+            - name: redmine-secrets
               mountPath: /etc/redmine-secrets
               readOnly: true
           livenessProbe:
@@ -37,6 +37,6 @@ spec:
             initialDelaySeconds: 30
             timeoutSeconds: 1
       volumes:
-        - name: secrets
+        - name: redmine-secrets
           secret:
             secretName: redmine-secrets
