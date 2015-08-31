@@ -491,7 +491,7 @@ With this we have setup a Kubernetes cluster consisting of a master and two work
 
 Kubernetes offers a [DNS cluster addon](https://github.com/kubernetes/kubernetes/tree/master/cluster/addons/dns) which uses [SkyDNS](https://github.com/skynetservices/skydns). In this section we deploy the DNS addon in our Kubernetes cluster.
 
-These instructions can be executed on any of the nodes of the cluster.
+These instructions can be executed on any of the nodes in the cluster.
 
 First, download the configuration templates.
 
