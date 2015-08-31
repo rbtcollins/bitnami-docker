@@ -6,11 +6,11 @@
 - [Create your cluster](#create-your-cluster)
     - [Network Configuration](#network-configuration)
     - [Kubernetes master](#kubernetes-master)
-        - [Create `k8s-master` VM](#create-k8s-master-vm)
+        - [Create master VM](#create-master-vm)
         - [Allow remote SSH connections (Optional)](#allow-remote-ssh-connections-optional)
         - [Setting up the master node](#setting-up-the-master-node)
     - [Kubernetes Worker](#kubernetes-worker)
-        - [Create `k8s-worker-01` VM](#create-k8s-worker-01-vm)
+        - [Create worker VM](#create-worker-vm)
         - [Setting up the worker node](#setting-up-the-worker-node)
 - [Download the configuration files](#download-the-configuration-files)
 - [Create the Docker container images](#create-the-docker-container-images)
@@ -262,9 +262,11 @@ Now when we create VM's in the **Kubernetes** VDC they will be able to resolve D
 
 ### Kubernetes master
 
-A Kubernetes cluster consists on one master node and zero or more worker nodes. In this section we will setup a master node named `k8s-master`.
+A Kubernetes cluster consists of a master and one or more worker nodes. In our  setup the master also acts as a worker. As a result we can create a single node Kubernetes cluster, but in this tutorial we will create we will create a master and two workers nodes.
 
-#### Create `k8s-master` VM
+In this section we will create the master node.
+
+#### Create master VM
 
 In vCloud Air, VM's are created from image templates. The default VMware catalog consists of a bunch of images templates to get you started.
 
@@ -413,7 +415,7 @@ $ wget https://raw.githubusercontent.com/kubernetes/kubernetes/master/docs/getti
 
 ### Kubernetes Worker
 
-#### Create `k8s-worker-01` VM
+#### Create worker VM
 
 Create the VM using:
 
@@ -483,13 +485,13 @@ $ export MASTER_IP=192.168.109.200 && \
   chmod +x worker.sh && ./worker.sh
 ```
 
-You can repeat these instructions in [Kubernetes Worker](#kubernetes-worker) to add more worker nodes to create a larger cluster. Remember to change the name and IP address while adding new VM's to the cluster.
+With this we have setup a Kubernetes cluster consisting of a master and two worker nodes. You can repeat these instructions in [Kubernetes Worker](#kubernetes-worker) to add more worker nodes to create a larger cluster. Remember to change the name and IP address while adding new VM's to the cluster.
 
 ### Deploy DNS
 
 Kubernetes offers a [DNS cluster addon](https://github.com/kubernetes/kubernetes/tree/master/cluster/addons/dns) which uses [SkyDNS](https://github.com/skynetservices/skydns). In this section we deploy the DNS addon in our Kubernetes cluster.
 
-These instructions can be executed on the master node or any of the worker nodes.
+These instructions can be executed on any of the nodes of the cluster.
 
 First, download the configuration templates.
 
