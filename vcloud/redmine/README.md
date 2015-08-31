@@ -894,20 +894,20 @@ To delete your application completely:
 
 *If you intend to teardown the entire cluster then jump to Step 3.*
 
-1. Delete the services:
-
-    ```bash
-    $ kubectl delete service redmine
-    $ kubectl delete service fakes3
-    $ kubectl delete service mariadb
-    ```
-
-2. Delete the controllers:
+1. Delete the controllers:
 
     ```bash
     $ kubectl delete rc redmine
     $ kubectl delete rc fakes3
     $ kubectl delete rc mariadb
+    ```
+
+2. Delete the services:
+
+    ```bash
+    $ kubectl delete service redmine
+    $ kubectl delete service fakes3
+    $ kubectl delete service mariadb
     ```
 
 3. Delete the Kubernetes VDC:

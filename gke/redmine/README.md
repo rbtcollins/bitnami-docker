@@ -420,18 +420,18 @@ To delete your application completely:
 
 *If you intend to teardown the entire cluster then jump to Step 4.*
 
-  1. Delete the services:
-
-  ```bash
-  $ kubectl delete service redmine
-  $ kubectl delete service mariadb
-  ```
-
-  2. Delete the controller:
+  1. Delete the controllers:
 
   ```bash
   $ kubectl delete rc redmine
   $ kubectl delete rc mariadb
+  ```
+
+  2. Delete the services:
+
+  ```bash
+  $ kubectl delete service redmine
+  $ kubectl delete service mariadb
   ```
 
   3. Delete the secret key store
