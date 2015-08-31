@@ -262,7 +262,7 @@ Now when we create VM's in the **Kubernetes** VDC they will be able to resolve D
 
 ### Kubernetes master
 
-A Kubernetes cluster consists of a master and one or more worker nodes. In our  setup the master also acts as a worker. As a result we can create a single node Kubernetes cluster, but in this tutorial we will create we will create a master and two workers nodes.
+A Kubernetes cluster consists of a master and one or more worker nodes. In our  setup the master also acts as a worker. As a result we can create a single node Kubernetes cluster, but in this tutorial we'll create a master and two workers nodes.
 
 In this section we will create the master node.
 
