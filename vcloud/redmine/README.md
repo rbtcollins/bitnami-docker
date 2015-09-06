@@ -33,6 +33,7 @@
 - [Possible improvements](#possible-improvements)
     - [Use secret volume to store sensitive information](#use-secret-volume-to-store-sensitive-information)
     - [Use persistent volumes for MariaDB and Fakes3 controllers](#use-persistent-volumes-for-mariadb-and-fakes3-controllers)
+    - [Use Object Storage from vCloud Air](#use-object-storage-from-vcloud-air)
     - [Add health checks to FakeS3 controller](#add-health-checks-to-fakes3-controller)
 
 This tutorial walks through setting up a scalable [Redmine](http://redmine.org) installation on VMware vCloud Air using the [Bitnami Container Images](https://bitnami.com/docker) for Docker and deployed using Kubernetes. If you're just looking for the quickest way to get Redmine up and running you might prefer our [prebuilt installers, VMs and Cloud Images](http://www.bitnami.com/stack/redmine). If you're interested in getting hands on with [Kubernetes](http://kubernetes.io) and [vCloud Air](https://vcloud.vmware.com), read on....
