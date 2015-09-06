@@ -928,6 +928,10 @@ A [secret key store](http://kubernetes.io/v1.0/docs/user-guide/secrets.html) is 
 
 For the MariaDB and FakeS3 services to preverse their state across pod shutdown and startup we should make use of [volumes](http://kubernetes.io/v1.0/docs/user-guide/volumes.html).
 
+## Use Object Storage from vCloud Air
+
+Instead of FakeS3 the newly announced [vCloud Air native object storage](http://vcloud.vmware.com/service-offering/object-storage) to store uploaded files.
+
 ## Add health checks to FakeS3 controller
 
 Health checks allow Kubernetes to check the health of pods in a replication controller and take corrective action on failures. The following health check on the FakeS3 replication controller seem to cause the fakes3 service to error out:
