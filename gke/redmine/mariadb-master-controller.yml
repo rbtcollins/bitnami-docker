@@ -25,11 +25,11 @@ spec:
               value: redmine
             - name: MARIADB_PASSWORD
               value: secretpassword
-            - name: REPLICATION_MODE
+            - name: MARIADB_REPLICATION_MODE
               value: master
-            - name: REPLICATION_USER
+            - name: MARIADB_REPLICATION_USER
               value: replication
-            - name: REPLICATION_PASSWORD
+            - name: MARIADB_REPLICATION_PASSWORD
               value: secretpassword
           ports:
             - containerPort: 3306

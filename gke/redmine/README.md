@@ -121,7 +121,7 @@ The first thing that we're going to do is start a [pod](http://kubernetes.io/v1.
 
 We'll use the config file `mariadb-master-controller.yml` to create the master pod. The pod definition creates a single pod.
 
-> **Note**: You should change the value of the `MARIADB_PASSWORD` and `REPLICATION_PASSWORD` env variables to your choosing.
+> **Note**: You should change the value of the `MARIADB_PASSWORD` and `MARIADB_REPLICATION_PASSWORD` env variables to your choosing.
 
 To create the pod:
 
@@ -165,7 +165,7 @@ Next we setup the MariaDB slave pods and service. The slave pods will connect to
 
 The `mariadb-slave-controller.yml` config file describes the slave pods and specifies 3 replicas.
 
-> **Note**": You should change the value of the `MARIADB_PASSWORD`, `REPLICATION_PASSWORD` and `MASTER_PASSWORD` env variables with the ones specified in `mariadb-master-controller.yml`
+> **Note**": You should change the value of the `MARIADB_PASSWORD`, `MARIADB_REPLICATION_PASSWORD` and `MARIADB_MASTER_PASSWORD` env variables with the ones specified in `mariadb-master-controller.yml`
 
 To create the pod:
 
