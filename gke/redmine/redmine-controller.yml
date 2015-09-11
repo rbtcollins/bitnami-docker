@@ -17,6 +17,10 @@ spec:
         - name: redmine
           image: gcr.io/bitnami-tutorials/redmine
           env:
+            - name: DATABASE_MASTER_HOST
+              value: mariadb-master
+            - name: DATABASE_SLAVE_HOST
+              value: mariadb-slave
             - name: DATABASE_NAME
               value: redmine_production
             - name: DATABASE_USER
