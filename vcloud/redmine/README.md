@@ -12,6 +12,7 @@
     - [Kubernetes Worker](#kubernetes-worker)
         - [Create worker VM](#create-worker-vm)
         - [Setting up the worker node](#setting-up-the-worker-node)
+    - [Deploy DNS](#deploy-dns)
 - [Download the configuration files](#download-the-configuration-files)
 - [Create the Docker container images](#create-the-docker-container-images)
     - [FakeS3 Image](#fakes3-image)
