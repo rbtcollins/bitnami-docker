@@ -30,14 +30,14 @@ The latest version of Redmine can be downloaded from <a href="http://www.redmine
 Download and save the archive in your project directory using your browser, or command line.
 
 ```bash
-curl -LO http://www.redmine.org/releases/redmine-3.0.3.tar.gz
+curl -LO http://www.redmine.org/releases/redmine-3.1.0.tar.gz
 ```
 
 Next, unzip the archive into a subfolder named `redmine` in your project directory.
 
 ```bash
 mkdir -p redmine
-tar -xf redmine-3.0.3.tar.gz --strip=1 -C redmine/
+tar -xf redmine-3.1.0.tar.gz --strip=1 -C redmine/
 ```
 
 ### Step 2: Configure Redmine's database credentials
