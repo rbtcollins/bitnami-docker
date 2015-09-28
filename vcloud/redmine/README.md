@@ -401,7 +401,7 @@ $ curl -sSL https://get.docker.com/ | sh
 Set `K8S_VERSION` to the most recent Kubernetes [release](https://github.com/kubernetes/kubernetes/releases) and install `kubectl` using:
 
 ```bash
-$ export K8S_VERSION=1.0.5 && \
+$ export K8S_VERSION=1.0.6 && \
   wget https://github.com/kubernetes/kubernetes/releases/download/v${K8S_VERSION}/kubernetes.tar.gz && \
   tar xf kubernetes.tar.gz && \
   cp kubernetes/platforms/linux/$(dpkg --print-architecture)/kubectl /usr/local/bin && \
@@ -472,7 +472,7 @@ $ curl -sSL https://get.docker.com/ | sh
 Set `K8S_VERSION` to the most recent Kubernetes [release](https://github.com/kubernetes/kubernetes/releases) and install `kubectl` using:
 
 ```bash
-$ export K8S_VERSION=1.0.5 && \
+$ export K8S_VERSION=1.0.6 && \
   wget https://github.com/kubernetes/kubernetes/releases/download/v${K8S_VERSION}/kubernetes.tar.gz && \
   tar xf kubernetes.tar.gz && \
   cp kubernetes/platforms/linux/$(dpkg --print-architecture)/kubectl /usr/local/bin && \
