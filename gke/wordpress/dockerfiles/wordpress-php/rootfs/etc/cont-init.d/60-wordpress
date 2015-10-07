@@ -20,8 +20,8 @@ if [[ -z ${DATABASE_HOST} || -z ${DATABASE_NAME} || \
 fi
 
 # configure database settings
-s6-setuidgid $BITNAMI_APP_USER cp -a $WORDPRESS_INSTALL_DIR/wp-config-sample.php $WORDPRESS_INSTALL_DIR/wp-config.php
-s6-setuidgid $BITNAMI_APP_USER sed -i 's/localhost/'"${DATABASE_HOST}"'/' $WORDPRESS_INSTALL_DIR/wp-config.php
-s6-setuidgid $BITNAMI_APP_USER sed -i 's/username_here/'"${DATABASE_USER}"'/' $WORDPRESS_INSTALL_DIR/wp-config.php
-s6-setuidgid $BITNAMI_APP_USER sed -i 's/password_here/'"${DATABASE_PASSWORD}"'/' $WORDPRESS_INSTALL_DIR/wp-config.php
-s6-setuidgid $BITNAMI_APP_USER sed -i 's/database_name_here/'"${DATABASE_NAME}"'/' $WORDPRESS_INSTALL_DIR/wp-config.php
+s6-setuidgid $BITNAMI_APP_USER cp -a $WORDPRESS_INSTALL_DIR/wp-config-sample.php                                  $WORDPRESS_INSTALL_DIR/wp-config.php
+s6-setuidgid $BITNAMI_APP_USER sed -i "s/\('DB_NAME'\), \+\('database_name_here'\)/\1, '"${DATABASE_NAME}"'/"     $WORDPRESS_INSTALL_DIR/wp-config.php
+s6-setuidgid $BITNAMI_APP_USER sed -i "s/\('DB_USER'\), \+\('username_here'\)/\1, '"${DATABASE_USER}"'/"          $WORDPRESS_INSTALL_DIR/wp-config.php
+s6-setuidgid $BITNAMI_APP_USER sed -i "s/\('DB_PASSWORD'\), \+\('password_here'\)/\1, '"${DATABASE_PASSWORD}"'/"  $WORDPRESS_INSTALL_DIR/wp-config.php
+s6-setuidgid $BITNAMI_APP_USER sed -i "s/\('DB_HOST'\), \+\('localhost'\)/\1, '"${DATABASE_HOST}"'/"              $WORDPRESS_INSTALL_DIR/wp-config.php
