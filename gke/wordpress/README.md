@@ -176,20 +176,23 @@ A [secret key store](http://kubernetes.io/v1.0/docs/user-guide/secrets.html) is 
 
 We will create a key store to save the sensitive configuration parameters of our Wordpress container. This includes, but is not limited to the database password.
 
-Lets begin by encoding our secret data in base64, starting with the database password.
+Lets begin by encoding our secrets in base64, starting with the database password.
 
 ```bash
-$ base64 <<< "secretpassword"
+$ base64 -w128 <<< "secretpassword"
 c2VjcmV0cGFzc3dvcmQK
 ```
 
-Specify this base64 encoded data in the secret definition described in `wordpress-secrets.yml`.
+To secure our Wordpress blog we need to generate random and unique hashes for each of the following Wordpress parameters `AUTH_KEY`, `SECURE_AUTH_KEY`, `LOGGED_IN_KEY`, `NONCE_KEY`, `AUTH_SALT`, `SECURE_AUTH_SALT`, `LOGGED_IN_SALT` and `NONCE_SALT`. Generate a random hash for each of these parameters and encode them using `base64`.
 
-> **Note**:
->
-> Update the value of `database-password` with the `base64` encoded data generated above.
+```bash
+$ base64 -w128 <<< "mCjVXBV6jZVn9RCKsHZFGBcVmpQd8l9s"
+bUNqVlhCVjZqWlZuOVJDS3NIWkZHQmNWbXBRZDhsOXMK
+```
 
-Create the secret key store:
+> **Tip**:  You can use `pwgen -csv1 64` to generate a random and unique 64 character hash value. To generate a random hash and encode it with `base64` in a single command use `base64 -w128 <<< $(pwgen -csv1 64)`
+
+Update `wordpress-secrets.yml` with the `base64` encoded database password and hashes generated above and create the secret key store using:
 
 ```bash
 $ kubectl create -f wordpress-secrets.yml
@@ -200,7 +203,7 @@ See it running:
 ```bash
 $ kubectl get secrets -l name=wordpress-secrets
 NAME                TYPE      DATA
-wordpress-secrets   Opaque    1
+wordpress-secrets   Opaque    9
 ```
 
 This secret key store will be mounted at `/etc/secrets` in read-only mode in the Wordpress pods.
