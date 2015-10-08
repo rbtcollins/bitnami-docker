@@ -7,28 +7,43 @@ DATABASE_USER=${DATABASE_USER:-${MARIADB_ENV_MARIADB_USER}}
 DATABASE_PASSWORD=${DATABASE_PASSWORD:-${MARIADB_ENV_MARIADB_PASSWORD}}
 
 # lookup configurations in the secrets volume
-[[ -z ${DATABASE_PASSWORD}  && -f /etc/secrets/database-password ]] && DATABASE_PASSWORD=$(cat /etc/secrets/database-password)
-[[ -z ${AUTH_KEY}           && -f /etc/secrets/auth-key ]]          && AUTH_KEY=$(cat /etc/secrets/auth-key)
-[[ -z ${SECURE_AUTH_KEY}    && -f /etc/secrets/secure-auth-key ]]   && SECURE_AUTH_KEY=$(cat /etc/secrets/secure-auth-key)
-[[ -z ${LOGGED_IN_KEY}      && -f /etc/secrets/logged-in-key ]]     && LOGGED_IN_KEY=$(cat /etc/secrets/logged-in-key)
-[[ -z ${NONCE_KEY}          && -f /etc/secrets/nonce-key ]]         && NONCE_KEY=$(cat /etc/secrets/nonce-key)
-[[ -z ${AUTH_SALT}          && -f /etc/secrets/auth-salt ]]         && AUTH_SALT=$(cat /etc/secrets/auth-salt)
-[[ -z ${SECURE_AUTH_SALT}   && -f /etc/secrets/secure-auth-salt ]]  && SECURE_AUTH_SALT=$(cat /etc/secrets/secure-auth-salt)
-[[ -z ${LOGGED_IN_SALT}     && -f /etc/secrets/logged-in-salt ]]    && LOGGED_IN_SALT=$(cat /etc/secrets/logged-in-salt)
-[[ -z ${NONCE_SALT}         && -f /etc/secrets/nonce-salt ]]        && NONCE_SALT=$(cat /etc/secrets/nonce-salt)
+[[ -z ${DATABASE_PASSWORD}      && -f /etc/secrets/database-password ]]     && DATABASE_PASSWORD=$(cat /etc/secrets/database-password)
+[[ -z ${AUTH_KEY}               && -f /etc/secrets/auth-key ]]              && AUTH_KEY=$(cat /etc/secrets/auth-key)
+[[ -z ${SECURE_AUTH_KEY}        && -f /etc/secrets/secure-auth-key ]]       && SECURE_AUTH_KEY=$(cat /etc/secrets/secure-auth-key)
+[[ -z ${LOGGED_IN_KEY}          && -f /etc/secrets/logged-in-key ]]         && LOGGED_IN_KEY=$(cat /etc/secrets/logged-in-key)
+[[ -z ${NONCE_KEY}              && -f /etc/secrets/nonce-key ]]             && NONCE_KEY=$(cat /etc/secrets/nonce-key)
+[[ -z ${AUTH_SALT}              && -f /etc/secrets/auth-salt ]]             && AUTH_SALT=$(cat /etc/secrets/auth-salt)
+[[ -z ${SECURE_AUTH_SALT}       && -f /etc/secrets/secure-auth-salt ]]      && SECURE_AUTH_SALT=$(cat /etc/secrets/secure-auth-salt)
+[[ -z ${LOGGED_IN_SALT}         && -f /etc/secrets/logged-in-salt ]]        && LOGGED_IN_SALT=$(cat /etc/secrets/logged-in-salt)
+[[ -z ${NONCE_SALT}             && -f /etc/secrets/nonce-salt ]]            && NONCE_SALT=$(cat /etc/secrets/nonce-salt)
+[[ -z ${AWS_ACCESS_KEY_ID}      && -f /etc/secrets/aws-access-key-id ]]     && AWS_ACCESS_KEY_ID=$(cat /etc/secrets/aws-access-key-id)
+[[ -z ${AWS_SECRET_ACCESS_KEY}  && -f /etc/secrets/aws-secret-access-key ]] && AWS_SECRET_ACCESS_KEY=$(cat /etc/secrets/aws-secret-access-key)
 
 if [[ -z ${DATABASE_HOST} || -z ${DATABASE_NAME} || -z ${DATABASE_USER} || -z ${DATABASE_PASSWORD} ]]; then
+  echo ""
   echo "ERROR: "
   echo "  Please configure the database connection."
   echo "  Cannot continue without a database. Aborting..."
+  echo ""
+  exit 1
+fi
+
+if [[ -z ${AWS_ACCESS_KEY_ID}  || -z ${AWS_SECRET_ACCESS_KEY} ]]; then
+  echo ""
+  echo "ERROR: "
+  echo "  Please configure the AWS access credentials."
+  echo "  Cannot continue. Aborting..."
+  echo ""
   exit 1
 fi
 
 if [[ -z ${AUTH_KEY}  || -z ${SECURE_AUTH_KEY}  || -z ${LOGGED_IN_KEY}  || -z ${NONCE_KEY} ||
       -z ${AUTH_SALT} || -z ${SECURE_AUTH_SALT} || -z ${LOGGED_IN_SALT} || -z ${NONCE_SALT} ]]; then
+  echo ""
   echo "ERROR: "
   echo "  Please configure the salts and keys."
   echo "  Cannot continue. Aborting..."
+  echo ""
   exit 1
 fi
 
@@ -47,3 +62,10 @@ s6-setuidgid $BITNAMI_APP_USER sed -i "s/\('AUTH_SALT'\), \+\('put your unique p
 s6-setuidgid $BITNAMI_APP_USER sed -i "s/\('SECURE_AUTH_SALT'\), \+\('put your unique phrase here'\)/\1, '"${SECURE_AUTH_SALT}"'/"  $WORDPRESS_INSTALL_DIR/wp-config.php
 s6-setuidgid $BITNAMI_APP_USER sed -i "s/\('LOGGED_IN_SALT'\), \+\('put your unique phrase here'\)/\1, '"${LOGGED_IN_SALT}"'/"      $WORDPRESS_INSTALL_DIR/wp-config.php
 s6-setuidgid $BITNAMI_APP_USER sed -i "s/\('NONCE_SALT'\), \+\('put your unique phrase here'\)/\1, '"${NONCE_SALT}"'/"              $WORDPRESS_INSTALL_DIR/wp-config.php
+
+# configure AWS access keys
+cat >> $WORDPRESS_INSTALL_DIR/wp-config.php <<EOF
+
+define( 'AWS_ACCESS_KEY_ID', '${AWS_ACCESS_KEY_ID}' );
+define( 'AWS_SECRET_ACCESS_KEY', '${AWS_SECRET_ACCESS_KEY}' );
+EOF

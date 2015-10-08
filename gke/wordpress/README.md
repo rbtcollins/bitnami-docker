@@ -13,6 +13,7 @@
   + [MariaDB pod](#mariadb-pod)
   + [MariaDB service](#mariadb-service)
 - [Wordpress pod and service](#wordpress-pod-and-service)
+  + [Create Amazon S3 bucket](#create-amazon-s3-bucket)
   + [Wordpress secret store](#wordpress-secret-store)
   + [Wordpress pod](#wordpress-pod)
   + [Wordpress service](#wordpress-service)
@@ -170,6 +171,23 @@ mariadb   name=mariadb   name=mariadb   10.247.254.14   3306/TCP
 
 Now that you have the database up and running, lets set up the Wordpress instance.
 
+### Create Amazon S3 bucket
+
+For persistence of files uploaded to our Wordpress blog and to make it scalable we will use the Amazon S3 service. To achieve this our Wordpress image uses the [WP Offload S3](https://wordpress.org/plugins/amazon-s3-and-cloudfront/) Wordpress plugin. The plugin copies files to Amazon S3 as they are uploaded to the Wordpress media library.
+
+For the plugin to be able to create and/or access the S3 bucket, we need to provide AWS access credentials to our Wordpress pod.
+
+To generate the access keys:
+
+  1. Login to [Amazon Web Services](https://http://console.aws.amazon.com/)
+  2. On the top menubar, go to **Profile > Security Credentials**
+  3. Click on **Access Keys (Access Key ID and Secret Access Key)**
+  4. Select the **Create New Access Key**
+
+Make a note of the generated **Access Key** and **Secret**, in the next step we will specify them in the secrets definition.
+
+Now, go ahead and create a S3 bucket from AWS services panel.
+
 ### Wordpress secret store
 
 A [secret key store](http://kubernetes.io/v1.0/docs/user-guide/secrets.html) is intended to hold sensitive information such as passwords, access keys, etc. Having this information in a key store is safer and more flexible then putting it in to the pod definition.
@@ -183,7 +201,17 @@ $ base64 -w128 <<< "secretpassword"
 c2VjcmV0cGFzc3dvcmQK
 ```
 
-To secure our Wordpress blog we need to generate random and unique hashes for each of the following Wordpress parameters `AUTH_KEY`, `SECURE_AUTH_KEY`, `LOGGED_IN_KEY`, `NONCE_KEY`, `AUTH_SALT`, `SECURE_AUTH_SALT`, `LOGGED_IN_SALT` and `NONCE_SALT`. Generate a random hash for each of these parameters and encode them using `base64`.
+Next, we encode the AWS access credentials as generated in [Create Amazon S3 bucket](#create-amazon-s3-bucket).
+
+```bash
+$ base64 -w128 <<< "aws-access-key-id"
+YXdzLWFjY2Vzcy1rZXktaWQK
+
+$ base64 -w128 <<< "aws-secret-access-key"
+YXdzLXNlY3JldC1hY2Nlc3Mta2V5Cg==
+```
+
+To secure our Wordpress blog we need to generate random and unique hashes for each of the following Wordpress parameters `AUTH_KEY`, `SECURE_AUTH_KEY`, `LOGGED_IN_KEY`, `NONCE_KEY`, `AUTH_SALT`, `SECURE_AUTH_SALT`, `LOGGED_IN_SALT` and `NONCE_SALT`. Generate a random hash for each of these parameters (8 in total) and encode them using `base64`.
 
 ```bash
 $ base64 -w128 <<< "mCjVXBV6jZVn9RCKsHZFGBcVmpQd8l9s"
@@ -192,7 +220,7 @@ bUNqVlhCVjZqWlZuOVJDS3NIWkZHQmNWbXBRZDhsOXMK
 
 > **Tip**:  You can use `pwgen -csv1 64` to generate a random and unique 64 character hash value. To generate a random hash and encode it with `base64` in a single command use `base64 -w128 <<< $(pwgen -csv1 64)`
 
-Update `wordpress-secrets.yml` with the `base64` encoded database password and hashes generated above and create the secret key store using:
+Update `wordpress-secrets.yml` with the `base64` encoded database password, AWS credentials and hashes generated above and create the secret key store using:
 
 ```bash
 $ kubectl create -f wordpress-secrets.yml
@@ -203,7 +231,7 @@ See it running:
 ```bash
 $ kubectl get secrets -l name=wordpress-secrets
 NAME                TYPE      DATA
-wordpress-secrets   Opaque    9
+wordpress-secrets   Opaque    11
 ```
 
 This secret key store will be mounted at `/etc/secrets` in read-only mode in the Wordpress pods.
@@ -363,6 +391,8 @@ No events.
 
 Then, visit `http://x.x.x.x` in your favourite web browser, where `x.x.x.x` is the IP address listed next to `LoadBalancer Ingress` in the response. You will be greeted with the Wordpress setup page.
 
+After completing the setup login to the admin panel and  under the plugins menu activate the **Amazon Web Services** and **WP Offload S3** plugins. Next, configure the **WP Offload S3** plugin with the bucket name.
+
 ## Scaling the Redmine application
 
 Since the Wordpress and Apache pods are defined as a service that uses a replication controller, you can easily resize the number of pods in the replication controller as follows:
@@ -478,3 +508,5 @@ To delete your application completely:
   ```bash
   $ gcloud compute disks delete mariadb-disk
   ```
+
+  7. Delete the AWS S3 bucket using the Amazon console.
