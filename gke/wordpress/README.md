@@ -69,7 +69,7 @@ $ cd bitnami-docker/gke/wordpress
 
 ## Create the Docker container images
 
-In this section we will build the Docker images for our Wordpress blog.
+In this section we'll build the Docker images for our Wordpress blog.
 
 ### Wordpress
 
@@ -186,7 +186,7 @@ To generate the access keys:
   3. Click on **Access Keys (Access Key ID and Secret Access Key)**
   4. Select the **Create New Access Key**
 
-Make a note of the generated **Access Key** and **Secret**, in the next step we will specify them in the secrets definition.
+Make a note of the generated **Access Key** and **Secret**, in the next section we'll specify them in the secrets definition.
 
 To create the S3 bucket:
 
@@ -322,7 +322,7 @@ wordpress-apache-m2iag   1/1       Running   0          32s
 wordpress-php-8hgri      1/1       Running   0          2m
 ```
 
-You'll see a single MariaDB pod, a Wordpress pod and three Apache pods. In [Scaling the Apache application](#scaling-the-redmine-application) we will see how we can scale the Wordpress and Apache pods.
+You'll see a single MariaDB pod, a Wordpress pod and three Apache pods. In [Scaling the Apache application](#scaling-the-redmine-application) we'll see how we can scale the Wordpress and Apache pods.
 
 ### Apache service
 
