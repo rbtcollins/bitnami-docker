@@ -1,4 +1,5 @@
 #!/usr/bin/with-contenv bash
+set -e
 
 # automatically fetch database parameters from bitnami/mariadb
 DATABASE_HOST=${DATABASE_HOST:-${MARIADB_PORT_3306_TCP_ADDR}}

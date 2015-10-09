@@ -1,4 +1,5 @@
 #!/usr/bin/with-contenv bash
+set -e
 
 # create a catch-all vhost configuration for wordpress
 cat > $BITNAMI_APP_DIR/conf/vhosts/wordpress.conf <<EOF
