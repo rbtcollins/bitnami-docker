@@ -63,11 +63,6 @@ s6-setuidgid $BITNAMI_APP_USER sed -i "s/\('SECURE_AUTH_SALT'\), \+\('put your u
 s6-setuidgid $BITNAMI_APP_USER sed -i "s/\('LOGGED_IN_SALT'\), \+\('put your unique phrase here'\)/\1, '"${LOGGED_IN_SALT}"'/"      $WORDPRESS_INSTALL_DIR/wp-config.php
 s6-setuidgid $BITNAMI_APP_USER sed -i "s/\('NONCE_SALT'\), \+\('put your unique phrase here'\)/\1, '"${NONCE_SALT}"'/"              $WORDPRESS_INSTALL_DIR/wp-config.php
 
-# enable relocate
-cat >> $WORDPRESS_INSTALL_DIR/wp-config.php <<EOF
-define( 'RELOCATE', true );
-EOF
-
 # configure AWS access keys
 cat >> $WORDPRESS_INSTALL_DIR/wp-config.php <<EOF
 define( 'AWS_ACCESS_KEY_ID', '${AWS_ACCESS_KEY_ID}' );
