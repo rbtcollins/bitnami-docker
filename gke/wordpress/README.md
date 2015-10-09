@@ -173,9 +173,11 @@ Now that you have the database up and running, lets set up the Wordpress instanc
 
 ### Create Amazon S3 bucket
 
-For persistence of files uploaded to our Wordpress blog and to make it scalable we will use the Amazon S3 service. To achieve this our Wordpress image uses the [WP Offload S3](https://wordpress.org/plugins/amazon-s3-and-cloudfront/) Wordpress plugin. The plugin copies files to Amazon S3 as they are uploaded to the Wordpress media library.
+To allow horizontal scaling of the Wordpress blog we'll use the Amazon S3 service to host files uploaded to the Wordpress media library. This also ensures that the uploaded files are persistent across pod startup and shut down as you will see in [Take down and restart Wordpress](#take-down-and-restart-wordpress).
 
-For the plugin to be able to create and/or access the S3 bucket, we need to provide AWS access credentials to our Wordpress pod.
+Our Wordpress image uses the [Amazon Web Services](https://wordpress.org/plugins/amazon-web-services/) and [WP Offload S3](https://wordpress.org/plugins/amazon-s3-and-cloudfront/) plugins for adding Amazon S3 support.
+
+For the plugins to be able to create and/or access the S3 bucket, we need to provide AWS access credentials to our Wordpress pod.
 
 To generate the access keys:
 
@@ -186,7 +188,10 @@ To generate the access keys:
 
 Make a note of the generated **Access Key** and **Secret**, in the next step we will specify them in the secrets definition.
 
-Now, go ahead and create a S3 bucket from AWS services panel.
+To create the S3 bucket:
+
+  1. Login to [S3 Management Console](https://console.aws.amazon.com/s3/)
+  2. Click on **Create Bucket** and give it a name. Change the region if you need to.
 
 ### Wordpress secret store
 
@@ -391,7 +396,16 @@ No events.
 
 Then, visit `http://x.x.x.x` in your favourite web browser, where `x.x.x.x` is the IP address listed next to `LoadBalancer Ingress` in the response. You will be greeted with the Wordpress setup page.
 
-After completing the setup login to the admin panel and  under the plugins menu activate the **Amazon Web Services** and **WP Offload S3** plugins. Next, configure the **WP Offload S3** plugin with the bucket name.
+After completing the setup, access the Wordpress administration panel
+
+  1. On the left sidebar click on **Plugins**
+  2. Activate the **Amazon Web Services** and **WP Offload S3** plugins
+  3. Load the **Settings** panel of **WP Offload S3**
+  4. Enter the bucket name created in [Create Amazon S3 bucket](create-amazon-s3-bucket)
+  5. Turn on the **Remove Files From Server** setting
+  6. Save Changes
+
+You now have a scalable Wordpress blog. The next section demonstrates how the blog can be scaled, without any downtime, to meet the growing demands of your soon to be successfully blog.
 
 ## Scaling the Redmine application
 
@@ -509,4 +523,4 @@ To delete your application completely:
   $ gcloud compute disks delete mariadb-disk
   ```
 
-  7. Delete the AWS S3 bucket using the Amazon console.
+  7. Delete the AWS S3 bucket from the [S3 Management Console](https://console.aws.amazon.com/s3/).
