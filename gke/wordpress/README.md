@@ -52,8 +52,8 @@ A successful create response looks like:
 Creating cluster wordpress...done.
 Created [.../projects/bitnami-tutorials/zones/us-central1-b/clusters/wordpress].
 kubeconfig entry generated for wordpress.
-NAME       ZONE           MASTER_VERSION  MASTER_IP       MACHINE_TYPE   STATUS
-wordpress  us-central1-b  1.0.6           162.222.180.48  n1-standard-1  RUNNING
+NAME       ZONE           MASTER_VERSION  MASTER_IP      MACHINE_TYPE   STATUS
+wordpress  us-central1-b  1.0.6           23.251.156.14  n1-standard-1  RUNNING
 ```
 
 Now that your cluster is up and running, we are set to launch the components that make up our Wordpress deployment.
@@ -142,7 +142,7 @@ Check to see if the pod is running. It may take a minute to change from `Pending
 ```bash
 $ kubectl get pods -l name=mariadb
 NAME            READY     STATUS    RESTARTS   AGE
-mariadb-m1271   1/1       Running   0          20s
+mariadb-tuifw   1/1       Running   0          24s
 ```
 
 ### MariaDB service
@@ -164,7 +164,7 @@ See it running:
 ```bash
 $ kubectl get services mariadb
 NAME      LABELS         SELECTOR       IP(S)           PORT(S)
-mariadb   name=mariadb   name=mariadb   10.247.254.14   3306/TCP
+mariadb   name=mariadb   name=mariadb   10.247.253.29   3306/TCP
 ```
 
 ## Wordpress pod and service
@@ -260,7 +260,9 @@ Check to see if the pods are running. It may take a few minutes to change from `
 ```bash
 $ kubectl get pods -l name=wordpress-php
 NAME                  READY     STATUS    RESTARTS   AGE
-wordpress-php-8hgri   1/1       Running   0          21s
+wordpress-php-3vcer   1/1       Running   0          13s
+wordpress-php-rsin6   1/1       Running   0          13s
+wordpress-php-vxuu7   1/1       Running   0          13s
 ```
 
 ### Wordpress service
@@ -277,8 +279,8 @@ See it running:
 
 ```bash
 $ kubectl get services wordpress-php
-NAME            LABELS               SELECTOR             IP(S)            PORT(S)
-wordpress-php   name=wordpress-php   name=wordpress-php   10.247.244.105   9000/TCP
+NAME            LABELS               SELECTOR             IP(S)           PORT(S)
+wordpress-php   name=wordpress-php   name=wordpress-php   10.247.242.83   9000/TCP
 ```
 
 ## Apache pod and service
@@ -305,9 +307,9 @@ Check to see if the pods are running. It may take a few minutes to change from `
 ```bash
 $ kubectl get pods -l name=wordpress-apache
 NAME                     READY     STATUS    RESTARTS   AGE
-wordpress-apache-fku0h   1/1       Running   0          11s
-wordpress-apache-hwubs   1/1       Running   0          11s
-wordpress-apache-m2iag   1/1       Running   0          11s
+wordpress-apache-hhug3   1/1       Running   0          20s
+wordpress-apache-t2es9   1/1       Running   0          20s
+wordpress-apache-vcldw   1/1       Running   0          20s
 ```
 
 Once the servers are up, you can list the pods in the cluster, to verify that they're all running:
@@ -315,11 +317,13 @@ Once the servers are up, you can list the pods in the cluster, to verify that th
 ```bash
 $ kubectl get pods
 NAME                     READY     STATUS    RESTARTS   AGE
-mariadb-m1271            1/1       Running   0          16m
-wordpress-apache-fku0h   1/1       Running   0          32s
-wordpress-apache-hwubs   1/1       Running   0          32s
-wordpress-apache-m2iag   1/1       Running   0          32s
-wordpress-php-8hgri      1/1       Running   0          2m
+mariadb-tuifw            1/1       Running   0          3m
+wordpress-apache-hhug3   1/1       Running   0          36s
+wordpress-apache-t2es9   1/1       Running   0          36s
+wordpress-apache-vcldw   1/1       Running   0          36s
+wordpress-php-3vcer      1/1       Running   0          1m
+wordpress-php-rsin6      1/1       Running   0          1m
+wordpress-php-vxuu7      1/1       Running   0          1m
 ```
 
 You'll see a single MariaDB pod, a Wordpress pod and three Apache pods. In [Scaling the Apache application](#scaling-the-redmine-application) we'll see how we can scale the Wordpress and Apache pods.
@@ -338,8 +342,8 @@ See it running:
 
 ```bash
 $ kubectl get services wordpress-apache
-NAME               LABELS                  SELECTOR                IP(S)           PORT(S)
-wordpress-apache   name=wordpress-apache   name=wordpress-apache   10.247.248.86   80/TCP
+NAME               LABELS                  SELECTOR                IP(S)          PORT(S)
+wordpress-apache   name=wordpress-apache   name=wordpress-apache   10.247.240.7   80/TCP
 
 ```
 
@@ -352,9 +356,9 @@ First we need to get the node prefix for the cluster using `kubectl get nodes`:
 ```bash
 $ kubectl get nodes
 NAME                               LABELS                                                    STATUS
-gke-wordpress-71da2c3f-node-0c48   kubernetes.io/hostname=gke-wordpress-71da2c3f-node-0c48   Ready
-gke-wordpress-71da2c3f-node-6cel   kubernetes.io/hostname=gke-wordpress-71da2c3f-node-6cel   Ready
-gke-wordpress-71da2c3f-node-tus4   kubernetes.io/hostname=gke-wordpress-71da2c3f-node-tus4   Ready
+gke-wordpress-4cda2820-node-0by1   kubernetes.io/hostname=gke-wordpress-4cda2820-node-0by1   Ready
+gke-wordpress-4cda2820-node-0c8b   kubernetes.io/hostname=gke-wordpress-4cda2820-node-0c8b   Ready
+gke-wordpress-4cda2820-node-j5wr   kubernetes.io/hostname=gke-wordpress-4cda2820-node-j5wr   Ready
 ```
 
 The value of `--target-tag` in the command below is the node prefix for the cluster up to `-node`.
@@ -369,7 +373,7 @@ A successful response looks like:
 ```bash
 Created [.../projects/bitnami-tutorials/global/firewalls/wordpress-http].
 NAME           NETWORK SRC_RANGES RULES  SRC_TAGS TARGET_TAGS
-wordpress-http default 0.0.0.0/0  tcp:80          gke-wordpress-71da2c3f-node
+wordpress-http default 0.0.0.0/0  tcp:80          gke-wordpress-4cda2820-node
 ```
 
 Alternatively, you can open up port 80 from the [Developers Console](https://console.developers.google.com/).
@@ -385,11 +389,11 @@ Namespace:              default
 Labels:                 name=wordpress-apache
 Selector:               name=wordpress-apache
 Type:                   LoadBalancer
-IP:                     10.247.248.86
-LoadBalancer Ingress:   104.197.114.51
+IP:                     10.247.240.7
+LoadBalancer Ingress:   146.148.77.140
 Port:                   <unnamed> 80/TCP
 NodePort:               <unnamed> 31191/TCP
-Endpoints:              10.244.0.5:80,10.244.2.5:80,10.244.2.6:80
+Endpoints:              10.244.0.6:80,10.244.1.6:80,10.244.2.4:80
 Session Affinity:       None
 No events.
 ```
