@@ -249,7 +249,7 @@ The controller and its pod template is described in the file `wordpress-controll
 >
 > Change the image name to `gcr.io/<google-project-name>/wordpress-php` as per the build instructions in [Wordpress image](#wordpress-image).
 
-It specifies 1 replicas of the pod. Using this file, you can start your Wordpress controller with:
+It specifies 3 replicas of the pod. Using this file, you can start your Wordpress controller with:
 
 ```bash
 $ kubectl create -f wordpress-controller.yml
