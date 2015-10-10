@@ -22,7 +22,7 @@
   + [Apache service](#apache-service)
 - [Allow external traffic](#allow-external-traffic)
 - [Access your Wordpress server](#access-your-wordpress-server)
-- [Scaling the Wordpress application](#scaling-the-wordpress-application)
+- [Scaling the Wordpress blog](#scaling-the-wordpress-blog)
 - [Take down and restart Wordpress](#take-down-and-restart-wordpress)
 - [Cleanup](#cleanup)
 
@@ -330,7 +330,7 @@ wordpress-php-rsin6      1/1       Running   0          1m
 wordpress-php-vxuu7      1/1       Running   0          1m
 ```
 
-You'll see a single MariaDB pod, a Wordpress pod and three Apache pods. In [Scaling the Apache application](#scaling-the-redmine-application) we'll see how we can scale the Wordpress and Apache pods.
+You'll see a single MariaDB pod, a Wordpress pod and three Apache pods. In [Scaling the Wordpress blog](#scaling-the-wordpress-blog) we'll see how we can scale the Wordpress and Apache pods.
 
 ### Apache service
 
@@ -415,7 +415,7 @@ After completing the setup, access the Wordpress administration panel
 
 You now have a scalable Wordpress blog. The next section demonstrates how the blog can be scaled, without any downtime, to meet the growing demands of your soon to be successfully blog.
 
-## Scaling the Redmine application
+## Scaling the Wordpress blog
 
 Since the Wordpress and Apache pods are defined as a service that uses a replication controller, you can easily resize the number of pods in the replication controller as follows:
 
