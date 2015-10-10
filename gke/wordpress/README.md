@@ -13,7 +13,7 @@
   + [MariaDB pod](#mariadb-pod)
   + [MariaDB service](#mariadb-service)
 - [Wordpress pod and service](#wordpress-pod-and-service)
-  + [Create Amazon S3 bucket](#create-amazon-s3-bucket)
+  + [Create Google cloud storage bucket](#create-google-cloud-storage-bucket)
   + [Wordpress secret store](#wordpress-secret-store)
   + [Wordpress pod](#wordpress-pod)
   + [Wordpress service](#wordpress-service)
@@ -171,27 +171,31 @@ mariadb   name=mariadb   name=mariadb   10.247.253.29   3306/TCP
 
 Now that you have the database up and running, lets set up the Wordpress instance.
 
-### Create Amazon S3 bucket
+### Create Google cloud storage bucket
 
-To allow horizontal scaling of the Wordpress blog we'll use the Amazon S3 service to host files uploaded to the Wordpress media library. This also ensures that the uploaded files are persistent across pod startup and shut down as you will see in [Take down and restart Wordpress](#take-down-and-restart-wordpress).
+To allow horizontal scaling of the Wordpress blog we'll use the Google cloud storage service, in S3 interoperability mode, to host files uploaded to the Wordpress media library. This also ensures that the uploaded files are persistent across pod startup and shut down as you will see in [Take down and restart Wordpress](#take-down-and-restart-wordpress).
 
-Our Wordpress image uses the [Amazon Web Services](https://wordpress.org/plugins/amazon-web-services/) and [WP Offload S3](https://wordpress.org/plugins/amazon-s3-and-cloudfront/) plugins for adding Amazon S3 support.
+Our Wordpress image uses the patched versions of the [Amazon Web Services](https://github.com/timwhite/wp-amazon-web-services) and [WP Offload S3](https://github.com/timwhite/wp-amazon-s3-and-cloudfront) plugins for use with Google cloud storage.
 
-For the plugins to be able to create and/or access the S3 bucket, we need to provide AWS access credentials to our Wordpress pod.
+For the plugins to be able to create and/or access the storage bucket, we need to provide access credentials to our Wordpress pod.
 
-To generate the access keys:
+To create a bucket and developer key:
 
-  1. Login to [Amazon Web Services](https://http://console.aws.amazon.com/)
-  2. On the top menubar, go to **Profile > Security Credentials**
-  3. Click on **Access Keys (Access Key ID and Secret Access Key)**
-  4. Select the **Create New Access Key**
+  1. Go to the [Google Developers Console](https://console.developers.google.com/).
+  2. Click the name of your project.
+  3. In the left sidebar, go to **Storage > Cloud Storage > Browser**.
+  4. Select **Create bucket** and give it the name.
+
+  ![Create Bucket](images/create-bucket.png)
+
+  5. In the left sidebar, go to **Storage > Cloud Storage > Storage settings**.
+  6. Select **Interoperability**.
+  7. If you have not set up interoperability before, click **Enable interoperability access**.
+  8. Click **Create a new key**.
+
+  ![Create Developer Key](images/create-developer-key.png)
 
 Make a note of the generated **Access Key** and **Secret**, in the next section we'll specify them in the secrets definition.
-
-To create the S3 bucket:
-
-  1. Login to [S3 Management Console](https://console.aws.amazon.com/s3/)
-  2. Click on **Create Bucket** and give it a name. Change the region if you need to.
 
 ### Wordpress secret store
 
@@ -206,14 +210,14 @@ $ base64 -w128 <<< "secretpassword"
 c2VjcmV0cGFzc3dvcmQK
 ```
 
-Next, we encode the AWS access credentials as generated in [Create Amazon S3 bucket](#create-amazon-s3-bucket).
+Next, we encode the S3 access credentials as generated in [Create Google cloud storage bucket](#create-google-cloud-storage-bucket).
 
 ```bash
-$ base64 -w128 <<< "aws-access-key-id"
-YXdzLWFjY2Vzcy1rZXktaWQK
+$ base64 <<< "GOOGUF56OWN3R3LFYOZE"
+R09PR1VGNTZPV04zUjNMRllPWkUK
 
-$ base64 -w128 <<< "aws-secret-access-key"
-YXdzLXNlY3JldC1hY2Nlc3Mta2V5Cg==
+$ base64 <<< "A+uW0XLz9Y+EHUGRUf1V2uApcI/TenhBtUnPao7i"
+QSt1VzBYTHo5WStFSFVHUlVmMVYydUFwY0kvVGVuaEJ0VW5QYW83aQo=
 ```
 
 To secure our Wordpress blog we need to generate random and unique hashes for each of the following Wordpress parameters `AUTH_KEY`, `SECURE_AUTH_KEY`, `LOGGED_IN_KEY`, `NONCE_KEY`, `AUTH_SALT`, `SECURE_AUTH_SALT`, `LOGGED_IN_SALT` and `NONCE_SALT`. Generate a random hash for each of these parameters (8 in total) and encode them using `base64`.
@@ -225,7 +229,7 @@ bUNqVlhCVjZqWlZuOVJDS3NIWkZHQmNWbXBRZDhsOXMK
 
 > **Tip**:  You can use `pwgen -csv1 64` to generate a random and unique 64 character hash value. To generate a random hash and encode it with `base64` in a single command use `base64 -w128 <<< $(pwgen -csv1 64)`
 
-Update `wordpress-secrets.yml` with the `base64` encoded database password, AWS credentials and hashes generated above and create the secret key store using:
+Update `wordpress-secrets.yml` with the `base64` encoded database password, S3 credentials and hashes generated above and create the secret key store using:
 
 ```bash
 $ kubectl create -f wordpress-secrets.yml
@@ -405,7 +409,7 @@ After completing the setup, access the Wordpress administration panel
   1. On the left sidebar click on **Plugins**
   2. Activate the **Amazon Web Services** and **WP Offload S3** plugins
   3. Load the **Settings** panel of **WP Offload S3**
-  4. Enter the bucket name created in [Create Amazon S3 bucket](create-amazon-s3-bucket)
+  4. Enter the bucket name created in [Create Google cloud storage bucket](#create-google-cloud-storage-bucket)
   5. Turn on the **Remove Files From Server** setting
   6. Save Changes
 
@@ -527,4 +531,4 @@ To delete your application completely:
   $ gcloud compute disks delete mariadb-disk
   ```
 
-  7. Delete the AWS S3 bucket from the [S3 Management Console](https://console.aws.amazon.com/s3/).
+  7. Delete the bucket and developer key from the [Google Developers Console](https://console.developers.google.com/)
