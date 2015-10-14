@@ -17,8 +17,10 @@ spec:
         - name: wordpress-php
           image: tutorials/wordpress-php
           env:
-            - name: DATABASE_HOST
-              value: mariadb
+            - name: DATABASE_MASTER_HOST
+              value: mariadb-master
+            - name: DATABASE_SLAVE_HOST
+              value: mariadb-slave
             - name: DATABASE_USER
               value: wordpress
             - name: DATABASE_NAME
