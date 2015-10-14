@@ -10,7 +10,7 @@ cat > $BITNAMI_APP_DIR/conf/vhosts/wordpress.conf <<EOF
   DirectoryIndex index.html, index.php
   DocumentRoot "$WORDPRESS_INSTALL_DIR"
 
-  ProxyPassMatch ^/(.*\.php(/.*)?)$ fcgi://wordpress-php:9000$WORDPRESS_INSTALL_DIR/$1
+  ProxyPassMatch ^/(.*\.php(/.*)?)\$ fcgi://wordpress-php:9000$WORDPRESS_INSTALL_DIR/\$1
   <Directory "$WORDPRESS_INSTALL_DIR">
     Options Indexes FollowSymLinks MultiViews
     AllowOverride All
