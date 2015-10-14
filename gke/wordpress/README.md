@@ -26,6 +26,10 @@
 
 This tutorial walks through setting up a scalable [Wordpress](http://wordpress.org) installation on Google Container Engine using the [Bitnami Container Images](https://bitnami.com/docker) for Docker. If you're just looking for the quickest way to get Wordpress up and running you might prefer our [prebuilt installers, VMs and Cloud Images](http://www.bitnami.com/stack/wordpress). If you're interested in getting hands on with [Kubernetes](http://kubernetes.io) and [Google Container Engine](https://cloud.google.com/container-engine/), read on....
 
+The following illustration provides an overview of the architecture we will setup using Kubernetes and Bitnami container images for our Wordpress deployment.
+
+![Architecture](images/architecture.png)
+
 We'll be creating a scalable Wordpress installation backed by a cluster if MariaDB containers which can be scaled horizontally on-demand. We also configure load balancing, an external IP, a secret store and health checks. We use [Google Cloud Storage](https://cloud.google.com/storage/) for persistent file uploads.
 
 ## Prerequisites
@@ -108,6 +112,10 @@ wordpress  us-central1-b  1.0.6           104.154.78.26  n1-standard-1  RUNNING
 Now that your cluster is up and running, we are set to launch the components that make up our Wordpress deployment.
 
 ## MariaDB
+
+![MariaDB](images/mariadb.png)
+
+The above diagram illustrates our MariaDB backend. We will create a MariaDB master/slave configuration where the slave pods will replicate the Wordpress database from the master. This will enable us to horizontally scale the MariaDB slave pods when required.
 
 ### Create persistent disk
 
@@ -207,6 +215,10 @@ mariadb-slave   name=mariadb-slave   name=mariadb-slave   10.247.245.216   3306/
 ## Wordpress
 
 Now that you have the database up and running, lets set up the Wordpress instance.
+
+![Wordpress](images/wordpress.png)
+
+The above diagram illustrates the Wordpress pod and service configuration.
 
 ### Create Google cloud storage bucket
 
@@ -323,6 +335,10 @@ wordpress-php   name=wordpress-php   name=wordpress-php   10.247.250.17   9000/T
 ## Apache
 
 Now that we have the MariaDB and Wordpress pods up and running, lets set up the Apache service which will act as the frontend to our Wordpress blog.
+
+![Apache](images/apache.png)
+
+The above diagram illustrates the Apache pod and service configuration.
 
 ### Apache pod and service
 
