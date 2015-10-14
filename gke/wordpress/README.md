@@ -51,7 +51,7 @@ $ cd bitnami-docker/gke/wordpress
 
 In this section we'll build the Docker images for our Wordpress blog.
 
-### Wordpress
+### Wordpress image
 
 The Wordpress image is built using the `Dockerfile` from the `dockerfiles/wordpress-php` directory. Docker container images can extend from other existing images. Since Wordpress is a PHP application, we'll extend from the `bitnami/php-fpm` image.
 
@@ -70,7 +70,7 @@ Then push this image to the Google Container Registry:
 $ gcloud docker push gcr.io/<google-project-name>/wordpress-php
 ```
 
-### Apache
+### Apache image
 
 The Apache image is built using the `Dockerfile` from the `dockerfiles/wordpress-apache` directory and it extends the existing `bitnami/apache` image.
 
