@@ -54,7 +54,7 @@ fi
 s6-setuidgid $BITNAMI_APP_USER sed -i "s/\('DB_NAME'\), \+\('database_name_here'\)/\1, '"${DATABASE_NAME}"'/"     $WORDPRESS_INSTALL_DIR/wp-config.php
 s6-setuidgid $BITNAMI_APP_USER sed -i "s/\('DB_USER'\), \+\('username_here'\)/\1, '"${DATABASE_USER}"'/"          $WORDPRESS_INSTALL_DIR/wp-config.php
 s6-setuidgid $BITNAMI_APP_USER sed -i "s/\('DB_PASSWORD'\), \+\('password_here'\)/\1, '"${DATABASE_PASSWORD}"'/"  $WORDPRESS_INSTALL_DIR/wp-config.php
-s6-setuidgid $BITNAMI_APP_USER sed -i "s/\('DB_HOST'\), \+\('localhost'\)/\1, '"${DATABASE_MASTER_HOST}"'/"              $WORDPRESS_INSTALL_DIR/wp-config.php
+s6-setuidgid $BITNAMI_APP_USER sed -i "s/\('DB_HOST'\), \+\('localhost'\)/\1, '"${DATABASE_MASTER_HOST}"'/"       $WORDPRESS_INSTALL_DIR/wp-config.php
 cat >> $WORDPRESS_INSTALL_DIR/wp-config.php <<EOF
 define('DB_SLAVE_HOST', '${DATABASE_SLAVE_HOST}');
 EOF
