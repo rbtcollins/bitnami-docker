@@ -26,7 +26,7 @@
 
 This tutorial walks through setting up a scalable [Wordpress](http://wordpress.org) installation on Google Container Engine using the [Bitnami Container Images](https://bitnami.com/docker) for Docker. If you're just looking for the quickest way to get Wordpress up and running you might prefer our [prebuilt installers, VMs and Cloud Images](http://www.bitnami.com/stack/wordpress). If you're interested in getting hands on with [Kubernetes](http://kubernetes.io) and [Google Container Engine](https://cloud.google.com/container-engine/), read on....
 
-The following illustration provides an overview of the architecture we will setup using Kubernetes and Bitnami container images for our Wordpress deployment.
+The following illustration provides an overview of the architecture we'll setup using Kubernetes and Bitnami container images for our Wordpress deployment.
 
 ![Architecture](images/architecture.png)
 
@@ -74,7 +74,7 @@ $ gcloud docker push gcr.io/<google-project-name>/wordpress-php
 
 The Apache image is built using the `Dockerfile` from the `dockerfiles/wordpress-apache` directory and it extends the existing `bitnami/apache` image.
 
-This image is used to serve static Wordpress assets (css, js, images, etc). It also adds a catch-all virtual host configuration that proxies requests for dynamic content to the Wordpress container using the TCP socket exposed by the PHP-FPM daemon.
+This image is used to serve static Wordpress assets (css, js, images, etc). It also adds a catch-all virtual host configuration that proxies requests for dynamic PHP content to the Wordpress container using the TCP socket exposed by the PHP-FPM daemon.
 
 Build the image by running:
 
@@ -115,11 +115,13 @@ Now that your cluster is up and running, we are set to launch the components tha
 
 ![MariaDB](images/mariadb.png)
 
-The above diagram illustrates our MariaDB backend. We will create a MariaDB master/slave configuration where the slave pods will replicate the Wordpress database from the master. This will enable us to horizontally scale the MariaDB slave pods when required.
+The above diagram illustrates our MariaDB backend. We'll create a MariaDB master/slave configuration where the slave pods will replicate the Wordpress database from the master. This will enable us to horizontally scale the MariaDB slave pods when required.
 
 ### Create persistent disk
 
-We will make use of [volumes](http://kubernetes.io/v1.0/docs/user-guide/volumes.html) for MariaDB, allowing the database server to preserve its state across pod shutdown and startup.
+We'll make use of [volumes](http://kubernetes.io/v1.0/docs/user-guide/volumes.html) for the MariaDB master, allowing the database server to preserve its state across pod shutdown and startup. This volume used in the pod definition of the MariaDB master controller.
+
+Create the persistent disk using:
 
 ```bash
 $ gcloud compute disks create --size 200GB mariadb-disk
@@ -128,15 +130,15 @@ NAME         ZONE          SIZE_GB TYPE        STATUS
 mariadb-disk us-central1-b 200     pd-standard READY
 ```
 
-The `mariadb-disk` is used in the pod definition of the MariaDB master controller to achieve persistence of the database across startups and shutdowns.
-
 ### MariaDB master pod and service
 
-For our Wordpress deployment, the first thing that we're going to do is start a [pod](http://kubernetes.io/v1.0/docs/user-guide/pods.html) for MariaDB master. We'll use a [replication controller](http://kubernetes.io/v1.0/docs/user-guide/replication-controller.html) to create the pod—even though it's a single pod, the controller is still useful for monitoring health and restarting the pod if required.
+The first thing that we're going to do is start a [pod](http://kubernetes.io/v1.0/docs/user-guide/pods.html) for MariaDB master. We'll use a [replication controller](http://kubernetes.io/v1.0/docs/user-guide/replication-controller.html) to create the pod — even though it's a single pod, the controller is still useful for monitoring health and restarting the pod if required.
 
-We'll use the config file `mariadb-master-controller.yml` for the pod which creates a single MariaDB master pod.
+We'll use the config file `mariadb-master-controller.yml` for the pod which creates a single MariaDB master pod with the label `name=mariadb-master`.
 
-> **Note**: You should change the value of the `MARIADB_PASSWORD` and `MARIADB_REPLICATION_PASSWORD` env variables to your choosing.
+> **Note**:
+>
+> You should change the value of the `MARIADB_PASSWORD` and `MARIADB_REPLICATION_PASSWORD` env variables to your choosing.
 
 To create the pod:
 
@@ -156,7 +158,7 @@ A [service](http://kubernetes.io/v1.0/docs/user-guide/services.html) is an abstr
 
 When you set up a service, you tell it the pods to proxy based on pod labels. Note that the pod that you created in previous step has the label the `name=mariadb-master`.
 
-We'll use the file `mariadb-master-service.yml` to create a service for MariaDB. The `selector` field of the service configuration determines which pods will receive the traffic sent to the service. So, the configuration specifies that we want this service to point to pods labeled with `name=mariadb-master`.
+We'll use the file `mariadb-master-service.yml` to create a service for MariaDB master. The `selector` field of the service configuration determines which pods will receive the traffic sent to the service. So, the configuration specifies that we want this service to point to pods labeled with `name=mariadb-master`.
 
 Start the service:
 
@@ -174,11 +176,9 @@ mariadb-master   name=mariadb-master   name=mariadb-master   10.247.254.63   330
 
 ### MariaDB slave pod and service
 
-Next we setup the MariaDB slave pods and service. The slave pods will connect to the master service and replicate the Wordpress database.
+Next we setup the MariaDB slave pods and service. The slave pods will connect to the master service and replicate the Wordpress database. The `mariadb-slave-controller.yml` config file describes the slave pods and specifies 3 replicas with the label `name=mariadb-slave`.
 
-The `mariadb-slave-controller.yml` config file describes the slave pods and specifies 3 replicas.
-
-> **Note**": You should change the value of the `MARIADB_PASSWORD`, `MARIADB_REPLICATION_PASSWORD` and `MARIADB_MASTER_PASSWORD` env variables with the ones specified in `mariadb-master-controller.yml`
+> **Note**: You should change the value of the `MARIADB_PASSWORD`, `MARIADB_REPLICATION_PASSWORD` and `MARIADB_MASTER_PASSWORD` env variables with the ones specified in `mariadb-master-controller.yml`
 
 To create the pod:
 
@@ -196,7 +196,7 @@ mariadb-slave-h8nk7   1/1       Running   0          14s
 mariadb-slave-kt7ne   1/1       Running   0          14s
 ```
 
-As with the MariaDB master pod, we want a service to group the slave pods. We'll use the file `mariadb-slave-service.yml` to create a service.
+As with the MariaDB master pod, we want a service to group the slave pods. We'll use the file `mariadb-slave-service.yml` to create a service which specifies the label `name=mariadb-slave` as the pod `selector`.
 
 Start the service:
 
@@ -214,7 +214,7 @@ mariadb-slave   name=mariadb-slave   name=mariadb-slave   10.247.245.216   3306/
 
 ## Wordpress
 
-Now that you have the database up and running, lets set up the Wordpress instance.
+Now that we have our database backend up and running, lets set up the Wordpress application instance.
 
 ![Wordpress](images/wordpress.png)
 
@@ -224,7 +224,7 @@ The above diagram illustrates the Wordpress pod and service configuration.
 
 To allow horizontal scaling of the Wordpress blog we'll use the Google cloud storage service, in S3 interoperability mode, to host files uploaded to the Wordpress media library. This also ensures that the uploaded files are persistent across pod startup and shut down as you will see in [Take down and restart Wordpress](#take-down-and-restart-wordpress).
 
-For Wordpress to be able to access the google cloud storage bucket, we need to provide access credentials to our Wordpress pod.
+For Wordpress to be able to access google cloud storage, we need to provide the access credentials to our Wordpress pod.
 
 To create a bucket and developer key:
 
@@ -248,7 +248,7 @@ Make a note of the generated **Access Key** and **Secret**, in the next section 
 
 A [secret key store](http://kubernetes.io/v1.0/docs/user-guide/secrets.html) is intended to hold sensitive information such as passwords, access keys, etc. Having this information in a key store is safer and more flexible then putting it in to the pod definition.
 
-We will create a key store to save the sensitive configuration parameters of our Wordpress container. This includes, but is not limited to the database password, session tokens, cloud storage access key id and secret.
+We'll create a key store to save the sensitive configuration parameters of our Wordpress deployment. This includes, but is not limited to the database password, session tokens, cloud storage access key id and secret.
 
 Lets begin by encoding our secrets in base64, starting with the database password.
 
@@ -257,7 +257,7 @@ $ base64 -w128 <<< "secretpassword"
 c2VjcmV0cGFzc3dvcmQK
 ```
 
-Next, we encode the S3 access credentials as generated in [Create Google cloud storage bucket](#create-google-cloud-storage-bucket).
+Next, we encode the S3 credentials as generated in [Create Google cloud storage bucket](#create-google-cloud-storage-bucket).
 
 ```bash
 $ base64 <<< "GOOGUF56OWN3R3LFYOZE"
@@ -274,9 +274,11 @@ $ base64 -w128 <<< "mCjVXBV6jZVn9RCKsHZFGBcVmpQd8l9s"
 bUNqVlhCVjZqWlZuOVJDS3NIWkZHQmNWbXBRZDhsOXMK
 ```
 
-> **Tip**:  You can use `pwgen -csv1 64` to generate a random and unique 64 character hash value. To generate a random hash and encode it with `base64` in a single command use `base64 -w128 <<< $(pwgen -csv1 64)`
+> **Tip**:  You can use `pwgen -csv1 64` to generate a random and unique 64 character hash value.
 
-Update `wordpress-secrets.yml` with the `base64` encoded database password, S3 credentials and hashes generated above and create the secret key store using:
+> **Pro Tip**: To generate a random hash and encode it with `base64` in a single command use `base64 -w128 <<< $(pwgen -csv1 64)`
+
+Update `wordpress-secrets.yml` with the `base64` encoded database password, S3 credentials and hashes and create the secret key store using:
 
 ```bash
 $ kubectl create -f wordpress-secrets.yml
@@ -294,13 +296,13 @@ This secret key store will be mounted at `/etc/secrets` in read-only mode in the
 
 ### Wordpress pod and service
 
-The controller and its pod template is described in the file `wordpress-controller.yml`.
+The controller and its pod template is described in the file `wordpress-controller.yml`. It specifies 3 replicas of the pod with the label `name=wordpress-php`.
 
 > **Note**:
 >
 > Change the image name to `gcr.io/<google-project-name>/wordpress-php` as per the build instructions in [Wordpress image](#wordpress-image).
 
-It specifies 3 replicas of the pod. Using this file, you can start your Wordpress controller with:
+Using this file, you can start your Wordpress controller with:
 
 ```bash
 $ kubectl create -f wordpress-controller.yml
@@ -316,7 +318,7 @@ wordpress-php-7nlh4   1/1       Running   0          15s
 wordpress-php-yg96d   1/1       Running   0          15s
 ```
 
-As with the MariaDB pods, we want a service to group the Wordpress pods. The service specification for the Wordpress service is in `wordpress-service.yml`.
+We want a service to group the Wordpress pods. The service specification for the Wordpress service is defined in `wordpress-service.yml` and specifies the label `name=wordpress-php` as the pod `selector`.
 
 Start the service using:
 
@@ -334,28 +336,25 @@ wordpress-php   name=wordpress-php   name=wordpress-php   10.247.250.17   9000/T
 
 ## Apache
 
-Now that we have the MariaDB and Wordpress pods up and running, lets set up the Apache service which will act as the frontend to our Wordpress blog.
+Now that we have the MariaDB and Wordpress pods up and running, lets set up the Apache pods and service which will act as the frontend to our Wordpress deployment as illustrated in the following illustration.
 
 ![Apache](images/apache.png)
 
-The above diagram illustrates the Apache pod and service configuration.
-
 ### Apache pod and service
 
-The controller and its pod template is described in the file `apache-controller.yml`.
+The controller and its pod template is described in the file `apache-controller.yml`. It specifies 3 replicas of the server with the label `name=wordpress-apache`.
 
 > **Note**
 >
 > 1. Change the image name to `gcr.io/<google-project-name>/wordpress-php` as per the build instructions in [Apache image](#apache-image).
 
-
-It specifies 3 replicas of the server. Using this file, you can start your Apache servers with:
+Using this file, you can start the Apache controller with:
 
 ```bash
 $ kubectl create -f apache-controller.yml
 ```
 
-Check to see if the pods are running. It may take a few minutes to change from `Pending` to `Running`:
+Check to see if the pods are running:
 
 ```bash
 $ kubectl get pods -l name=wordpress-apache
@@ -382,11 +381,11 @@ wordpress-php-7nlh4      1/1       Running   0          1m
 wordpress-php-yg96d      1/1       Running   0          1m
 ```
 
-You'll see a single MariaDB master pod, three MariaDB slave pods, three Wordpress pods and three Apache pods. In [Scaling the Wordpress blog](#scaling-the-wordpress-blog) we'll see how we can scale the MariaDB slave, Wordpress and Apache pods.
+You'll see a single MariaDB master pod, three MariaDB slave pods, three Wordpress pods and three Apache pods. In [Scaling the Wordpress blog](#scaling-the-wordpress-blog) we'll see how we can scale the MariaDB slave, Wordpress and Apache pods to meet the growing demands of your blog.
 
 As with the other pods, we want a service to group the Apache pods. However, this time it's different: this service is user-facing, so we want it to be externally visible. That is, we want a client to be able to request the service from outside the cluster. To accomplish this, we can set the `type: LoadBalancer` field in the service configuration.
 
-The service specification for the Apache is in `apache-service.yml`.
+The service specification for the Apache is in `apache-service.yml` which specifies the label `name=wordpress-apache` as the pod `selector`.
 
 ```bash
 $ kubectl create -f apache-service.yml
@@ -402,7 +401,7 @@ wordpress-apache   name=wordpress-apache   name=wordpress-apache   10.247.252.50
 
 ## Allow external traffic
 
-By default, the pod is only accessible by its internal IP within the cluster. In order to make the Wordpress service accessible from the internet we have to open port 80.
+By default, the pod is only accessible by its internal IP within the cluster. In order to make the Wordpress service accessible from the internet we have to open the TCP port `80`.
 
 First we need to get the node prefix for the cluster using:
 
@@ -429,11 +428,11 @@ NAME           NETWORK SRC_RANGES RULES  SRC_TAGS TARGET_TAGS
 wordpress-http default 0.0.0.0/0  tcp:80          gke-wordpress-17345479-node
 ```
 
-Alternatively, you can open up port 80 from the [Developers Console](https://console.developers.google.com/).
+Alternatively, you can open up port `80` from the [Developers Console](https://console.developers.google.com/).
 
 ## Access your Wordpress server
 
-Now that the firewall is open, you can access the service. Find the external IP of the Apache service you just set up:
+Now that the firewall is open, you can access the service over the internet. Find the external IP of the Apache service you just set up using:
 
 ```bash
 $ kubectl describe services wordpress-apache
@@ -451,18 +450,19 @@ Session Affinity:       None
 No events.
 ```
 
-Then, visit `http://x.x.x.x` in your favourite web browser, where `x.x.x.x` is the IP address listed next to `LoadBalancer Ingress` in the response. You will be greeted with the Wordpress setup page.
+Visit `http://x.x.x.x` in your favourite web browser, where `x.x.x.x` is the IP address listed next to `LoadBalancer Ingress` in the response of the above command. You will be greeted with the Wordpress setup:.
 
-After completing the setup, access the Wordpress administration panel
+Once you complete the setup, we need to enable the Amazon AWS Services and WP Offload S3 plugins from the Wordpress administration panel.
 
-  1. On the left sidebar click on **Plugins**
-  2. Activate the **Amazon Web Services** and **WP Offload S3** plugins
-  3. Load the **Settings** panel of **WP Offload S3**
-  4. Enter the bucket name created in [Create Google cloud storage bucket](#create-google-cloud-storage-bucket)
-  5. Turn on the **Remove Files From Server** setting
-  6. Save Changes
+  1. Login to the administration panel
+  2. On the left sidebar click on **Plugins**
+  3. Activate the **Amazon Web Services** and **WP Offload S3** plugins
+  4. Load the **Settings** panel of **WP Offload S3**
+  5. Enter the bucket name created in [Create Google cloud storage bucket](#create-google-cloud-storage-bucket)
+  6. Enable the **Remove Files From Server** configuration
+  7. Save the Changes
 
-You now have a scalable Wordpress blog. The next section demonstrates how the blog can be scaled, without any downtime, to meet the growing demands of your soon to be successfully blog.
+You now have a scalable Wordpress blog. The next section demonstrates how the blog can be scaled, without any downtime, to meet the growing demands of your blog.
 
 ## Scaling the Wordpress blog
 
@@ -486,13 +486,13 @@ mariadb-slave-rdlsh   1/1       Running   0          10s
 mariadb-slave-t9b4p   1/1       Running   0          10s
 ```
 
-Similarly to scale the Wordpress pods use:
+Similarly to scale the Wordpress pods:
 
 ```bash
 $ kubectl scale --replicas=5 rc wordpress-php
 ```
 
-and to scale the Apache pods use:
+and to scale the Apache pods:
 
 ```bash
 $ kubectl scale --replicas=5 rc wordpress-apache
@@ -500,9 +500,11 @@ $ kubectl scale --replicas=5 rc wordpress-apache
 
 You can scale down in the same manner.
 
+> **Note**: The MariaDB master controller cannot be scaled.
+
 ## Take down and restart Wordpress
 
-Because we used a persistent disk for the MariaDB pod and used Google cloud storage for files uploaded in Wordpress, your Wordpress state is preserved even when the pods it's running on are deleted. Lets try it.
+Because we used a persistent disk for the MariaDB master pod and used Google cloud storage for files uploaded to the Wordpress media library, the state of your Wordpress deployment is preserved even when the pods it's running on are deleted. Lets try it.
 
 ```bash
 $ kubectl delete rc wordpress-apache
@@ -534,7 +536,7 @@ Once the pods have restarted, the `mariadb-master`, `mariadb-slave`, `wordpress-
 
 To delete your application completely:
 
-*If you intend to teardown the entire cluster then jump to Step 4.*
+*If you intend to teardown the entire cluster, jump to __Step 4__.*
 
   1. Delete the controllers:
 
