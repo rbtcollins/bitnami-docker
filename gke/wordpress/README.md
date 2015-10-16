@@ -346,7 +346,7 @@ The controller and its pod template is described in the file `apache-controller.
 
 > **Note**
 >
-> 1. Change the image name to `gcr.io/<google-project-name>/wordpress-php` as per the build instructions in [Apache image](#apache-image).
+> 1. Change the image name to `gcr.io/<google-project-name>/wordpress-apache` as per the build instructions in [Apache image](#apache-image).
 
 Using this file, you can start the Apache controller with:
 
