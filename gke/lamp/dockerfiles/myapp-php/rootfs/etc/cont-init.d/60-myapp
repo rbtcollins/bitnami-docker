@@ -1,0 +1,26 @@
+#!/usr/bin/with-contenv bash
+set -e
+
+# automatically fetch database parameters from bitnami/mariadb
+DATABASE_HOST=${DATABASE_HOST:-${MARIADB_PORT_3306_TCP_ADDR}}
+DATABASE_NAME=${DATABASE_NAME:-${MARIADB_ENV_MARIADB_DATABASE}}
+DATABASE_USER=${DATABASE_USER:-${MARIADB_ENV_MARIADB_USER}}
+DATABASE_PASSWORD=${DATABASE_PASSWORD:-${MARIADB_ENV_MARIADB_PASSWORD}}
+
+# lookup configurations in the secrets volume
+[[ -z ${DATABASE_PASSWORD} && -f /etc/secrets/database-password ]] && DATABASE_PASSWORD=$(cat /etc/secrets/database-password)
+
+if [[ -z ${DATABASE_HOST} || -z ${DATABASE_NAME} || -z ${DATABASE_USER} || -z ${DATABASE_PASSWORD} ]]; then
+  echo ""
+  echo "ERROR: "
+  echo "  Please configure the database connection."
+  echo "  Cannot continue without a database. Aborting..."
+  echo ""
+  exit 1
+fi
+
+# configure database settings
+s6-setuidgid $BITNAMI_APP_USER sed -i 's/{{DB_HOST}}/'"${DATABASE_HOST}"'/'         $MYAPP_DIR/db-config.php
+s6-setuidgid $BITNAMI_APP_USER sed -i 's/{{DB_USER}}/'"${DATABASE_USER}"'/'         $MYAPP_DIR/db-config.php
+s6-setuidgid $BITNAMI_APP_USER sed -i 's/{{DB_PASSWORD}}/'"${DATABASE_PASSWORD}"'/' $MYAPP_DIR/db-config.php
+s6-setuidgid $BITNAMI_APP_USER sed -i 's/{{DB_NAME}}/'"${DATABASE_NAME}"'/'         $MYAPP_DIR/db-config.php
