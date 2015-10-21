@@ -57,6 +57,8 @@ Our sample application stores the visitor count in the MariaDB database. When we
 
 In the `Dockerfile` the application source is copied into the `/app` directory of the container. The base `bitnami/php-fpm` image uses [s6-overlay](https://github.com/just-containers/s6-overlay) for process supervision. We use the infrastucture provided by s6-overlay to create a container initialization script `/etc/cont-init.d/60-myapp` which configures the database connection parameters for our application in `/app/db-config.php`.
 
+> **Note**: Our sample application does not allow users to upload files. If your PHP application allows users to upload files then you should make use of a cloud storage service such as [Amazon S3](http://aws.amazon.com/s3/) or [Google Cloud Storage](https://cloud.google.com/storage/) for persistence and so that the instance can be scaled horizontally which is not possible when persistent volumes are used.
+
 Build the image by running:
 
 ```bash
