@@ -1,5 +1,5 @@
 
-# Scalable Wordpress Blog Using Bitnami Containers, Kubernetes and Google Cloud Platform
+# Scalable Wordpress Deployment Using Bitnami Containers, Kubernetes and Google Cloud Platform
 
 - [Prerequisites](#prerequisites)
   + [Container engine environment](#container-engine-environment)
@@ -24,13 +24,13 @@
 - [Take down and restart Wordpress](#take-down-and-restart-wordpress)
 - [Cleanup](#cleanup)
 
-This tutorial walks through setting up a scalable [Wordpress](http://wordpress.org) installation on Google Container Engine using the [Bitnami Container Images](https://bitnami.com/docker) for Docker. If you're just looking for the quickest way to get Wordpress up and running you might prefer our [prebuilt installers, VMs and Cloud Images](http://www.bitnami.com/stack/wordpress). If you're interested in getting hands on with [Kubernetes](http://kubernetes.io) and [Google Container Engine](https://cloud.google.com/container-engine/), read on....
+This tutorial walks through setting up a scalable [Wordpress](http://wordpress.org) deployment on Google Container Engine using the [Bitnami Container Images](https://bitnami.com/docker) for [Docker](https://www.docker.com/). If you're just looking for the quickest way to get Wordpress up and running you might prefer our [prebuilt installers, VMs and Cloud Images](http://www.bitnami.com/stack/wordpress). If you're interested in getting hands on with [Kubernetes](http://kubernetes.io) and [Google Container Engine](https://cloud.google.com/container-engine/), read on....
 
 The following illustration provides an overview of the architecture we'll setup using Kubernetes and Bitnami container images for our Wordpress deployment.
 
 ![Architecture](images/architecture.png)
 
-We'll be creating a scalable Wordpress installation backed by a cluster if MariaDB containers which can be scaled horizontally on-demand. We also configure load balancing, an external IP, a secret store and health checks. We use [Google Cloud Storage](https://cloud.google.com/storage/) for persistent file uploads.
+We'll be creating a scalable Wordpress deployment backed by a cluster of MariaDB instances which can be scaled horizontally on-demand. We'll attach a persistent disk to the MariaDB master instance so that our database backend can preserve its state across shutdown and startup. Three replicas of the Apache container will act as the frontend to our Wordpress deployment. For high availability the Wordpress instances will be configured to have three replicas. We also configure load balancing, external IP, a secret store and health checks.
 
 ## Prerequisites
 
@@ -53,7 +53,9 @@ In this section we'll build the Docker images for our Wordpress blog.
 
 ### Wordpress image
 
-The Wordpress image is built using the `Dockerfile` from the `dockerfiles/wordpress-php` directory. Docker container images can extend from other existing images. Since Wordpress is a PHP application, we'll extend from the `bitnami/php-fpm` image.
+The Wordpress image is built using the `Dockerfile` from the `dockerfiles/wordpress-php` directory. Docker container images can extend from other existing images. Since Wordpress is a PHP application, we'll extend the [bitnami/php-fpm](https://hub.docker.com/r/bitnami/php-fpm/) image.
+
+In the `Dockerfile` the Wordpress source is copied into the `/app` directory of the container. The base `bitnami/php-fpm` image uses [s6-overlay](https://github.com/just-containers/s6-overlay) for process supervision. We use the infrastucture provided by s6-overlay to create a container initialization script `/etc/cont-init.d/60-wordpress` which configures the database connection parameters for Wordpress in `/app/wp-config.php` among other things.
 
 Our Wordpress image uses the patched versions of the [Amazon Web Services](https://github.com/timwhite/wp-amazon-web-services) and [WP Offload S3](https://github.com/timwhite/wp-amazon-s3-and-cloudfront) plugins for use with Google cloud storage. It also installs the [HyperDB](https://github.com/taskrabbit/makara) plugin to enable support for our database replication backend.
 
@@ -72,9 +74,13 @@ $ gcloud docker push gcr.io/<google-project-name>/wordpress-php
 
 ### Apache image
 
-The Apache image is built using the `Dockerfile` from the `dockerfiles/wordpress-apache` directory and it extends the existing `bitnami/apache` image.
+The Apache image is built using the `Dockerfile` from the `dockerfiles/wordpress-apache` directory and it extends the [bitnami/apache](https://hub.docker.com/r/bitnami/apache/) image.
 
-This image is used to serve static Wordpress assets (css, js, images, etc). It also adds a catch-all virtual host configuration that proxies requests for dynamic PHP content to the Wordpress container using the TCP socket exposed by the PHP-FPM daemon.
+Apache serves as the frontend of our deployment and handles client HTTP requests while delegating the PHP processing to the `PHP-FPM` daemon of the Wordpress container instances.
+
+The Wordpress application and plugins source is also copied into the Apache image at `/app` so that the static site assets (css, js, images, etc) are locally available and ready to be served by the Apache server.
+
+Like the Wordpress image, we use a container initialization script `/etc/cont-init.d/60-wordpress` to create a catch-all virtual host configuration with `/app` as the [DocumentRoot](https://httpd.apache.org/docs/2.4/mod/core.html#documentroot) and the Wordpress instances as the PHP processing backends.
 
 Build the image by running:
 
@@ -91,7 +97,7 @@ $ gcloud docker push gcr.io/<google-project-name>/wordpress-apache
 
 ## Create your cluster
 
-Now you are ready to create the Kubernetes cluster on which you'll run Wordpress. A cluster consists of a master API server hosted by Google and a set of worker nodes.
+Now you are ready to create the Kubernetes cluster on which you'll run the Wordpress deployment. A cluster consists of a master API server hosted by Google and a set of worker nodes.
 
 Create a cluster named `wordpress`:
 
@@ -109,17 +115,17 @@ NAME       ZONE           MASTER_VERSION  MASTER_IP      MACHINE_TYPE   STATUS
 wordpress  us-central1-b  1.0.6           104.154.78.26  n1-standard-1  RUNNING
 ```
 
-Now that your cluster is up and running, we are set to launch the components that make up our Wordpress deployment.
+Now that your cluster is up and running, we are set to launch the components that make up our deployment.
 
 ## MariaDB
 
 ![MariaDB](images/mariadb.png)
 
-The above diagram illustrates our MariaDB backend. We'll create a MariaDB master/slave configuration where the slave pods will replicate the Wordpress database from the master. This will enable us to horizontally scale the MariaDB slave pods when required.
+The above diagram illustrates our MariaDB backend. We'll create a MariaDB master/slave configuration where the slave pods will replicate the Wordpress database from the master. This will enable us to horizontally scale the MariaDB slave pods when required. A persistent disk attached to the MariaDB master instance will allow the database backend to preserve its state across startup and shutdown.
 
 ### Create persistent disk
 
-We'll make use of [volumes](http://kubernetes.io/v1.0/docs/user-guide/volumes.html) for the MariaDB master, allowing the database server to preserve its state across pod shutdown and startup. This volume used in the pod definition of the MariaDB master controller.
+We'll make use of [volumes](http://kubernetes.io/v1.0/docs/user-guide/volumes.html) to create a persistent disk for the MariaDB master. This volume is used in the pod definition of the MariaDB master controller.
 
 Create the persistent disk using:
 
@@ -134,7 +140,7 @@ mariadb-disk us-central1-b 200     pd-standard READY
 
 The first thing that we're going to do is start a [pod](http://kubernetes.io/v1.0/docs/user-guide/pods.html) for MariaDB master. We'll use a [replication controller](http://kubernetes.io/v1.0/docs/user-guide/replication-controller.html) to create the pod — even though it's a single pod, the controller is still useful for monitoring health and restarting the pod if required.
 
-We'll use the config file `mariadb-master-controller.yml` for the pod which creates a single MariaDB master pod with the label `name=mariadb-master`.
+We'll use the config file `mariadb-master-controller.yml` for the pod which creates a single MariaDB master pod with the label `name=mariadb-master`. The pod uses the [bitnami/mariadb](https://hub.docker.com/r/bitnami/mariadb/) image and specifies the user and database to create as well as the replication parameters using environment variables.
 
 > **Note**:
 >
@@ -156,9 +162,9 @@ mariadb-master-ja9qy   1/1       Running   0          19s
 
 A [service](http://kubernetes.io/v1.0/docs/user-guide/services.html) is an abstraction which defines a logical set of pods and a policy by which to access them. It is effectively a named load balancer that proxies traffic to one or more pods.
 
-When you set up a service, you tell it the pods to proxy based on pod labels. Note that the pod that you created in previous step has the label the `name=mariadb-master`.
+When you set up a service, you tell it the pods to proxy based on pod labels. The pod that you created in previous step has the label `name=mariadb-master`.
 
-We'll use the file `mariadb-master-service.yml` to create a service for MariaDB master. The `selector` field of the service configuration determines which pods will receive the traffic sent to the service. So, the configuration specifies that we want this service to point to pods labeled with `name=mariadb-master`.
+We'll use the file `mariadb-master-service.yml` to create a service for the MariaDB master pod. The `selector` field of the service configuration determines which pods will receive the traffic sent to the service. So, the configuration specifies that we want this service to point to pods labeled with `name=mariadb-master`.
 
 Start the service:
 
@@ -248,9 +254,9 @@ Make a note of the generated **Access Key** and **Secret**, in the next section 
 
 A [secret key store](http://kubernetes.io/v1.0/docs/user-guide/secrets.html) is intended to hold sensitive information such as passwords, access keys, etc. Having this information in a key store is safer and more flexible then putting it in to the pod definition.
 
-We'll create a key store to save the sensitive configuration parameters of our Wordpress deployment. This includes, but is not limited to the database password, session tokens, cloud storage access key id and secret.
+We'll create a key store to save the sensitive configuration parameters of our deployment. This includes, but is not limited to the database password, session tokens, cloud storage access key id and secret.
 
-Lets begin by encoding our secrets in base64, starting with the database password.
+Begin by encoding our secrets in base64, starting with the database password.
 
 ```bash
 $ base64 -w128 <<< "secretpassword"
@@ -267,7 +273,7 @@ $ base64 <<< "A+uW0XLz9Y+EHUGRUf1V2uApcI/TenhBtUnPao7i"
 QSt1VzBYTHo5WStFSFVHUlVmMVYydUFwY0kvVGVuaEJ0VW5QYW83aQo=
 ```
 
-To secure our Wordpress blog we need to generate random and unique hashes for each of the following Wordpress parameters `AUTH_KEY`, `SECURE_AUTH_KEY`, `LOGGED_IN_KEY`, `NONCE_KEY`, `AUTH_SALT`, `SECURE_AUTH_SALT`, `LOGGED_IN_SALT` and `NONCE_SALT`. Generate a random hash for each of these parameters (8 in total) and encode them using `base64`.
+To secure Wordpress we need to generate random and unique hashes for each of the following Wordpress parameters `AUTH_KEY`, `SECURE_AUTH_KEY`, `LOGGED_IN_KEY`, `NONCE_KEY`, `AUTH_SALT`, `SECURE_AUTH_SALT`, `LOGGED_IN_SALT` and `NONCE_SALT`. Generate a random hash for each of these parameters (8 in total) and encode them using `base64`.
 
 ```bash
 $ base64 -w128 <<< "mCjVXBV6jZVn9RCKsHZFGBcVmpQd8l9s"
@@ -401,7 +407,7 @@ wordpress-apache   name=wordpress-apache   name=wordpress-apache   10.247.252.50
 
 ## Allow external traffic
 
-By default, the pod is only accessible by its internal IP within the cluster. In order to make the Wordpress service accessible from the internet we have to open the TCP port `80`.
+By default, the pod is only accessible by its internal IP within the cluster. In order to make the Apache service accessible from the internet we have to open the TCP port `80`.
 
 First we need to get the node prefix for the cluster using:
 
@@ -462,7 +468,7 @@ Once you complete the setup, we need to enable the Amazon AWS Services and WP Of
   6. Enable the **Remove Files From Server** configuration
   7. Save the Changes
 
-You now have a scalable Wordpress blog. The next section demonstrates how the blog can be scaled, without any downtime, to meet the growing demands of your blog.
+You now have a scalable Wordpress deployment. The next section demonstrates how it can be scaled without any downtime.
 
 ## Scaling the Wordpress blog
 
