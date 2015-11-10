@@ -28,7 +28,7 @@ if [[ -z ${DATABASE_PASSWORD} && -f /etc/redmine-secrets/database-password ]]; t
 fi
 
 if [[ -z ${DATABASE_MASTER_HOST} || -z ${DATABASE_SLAVE_HOST} || \
-      -z ${DATABASE_NAME} || -z ${DATABASE_USER} || -z ${DATABASE_PASSWORD} ]]; then
+      -z ${DATABASE_NAME} || -z ${DATABASE_USER} ]]; then
   echo "ERROR: "
   echo "  Please configure the database connection."
   echo "  Cannot continue without a database. Aborting..."
