@@ -1,0 +1,44 @@
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: liferay-controller
+spec:
+  replicas: 1
+  selector: 
+    app: liferay
+  template:
+    metadata:
+      labels:
+        app: liferay
+    spec:
+      containers:
+        - name: liferay
+          image: gcr.io/bitnami-containers-gcp/bitnami-liferay
+          imagePullPolicy: Always
+          env:
+            - name: LIFERAY_USERNAME
+              value: "Test Test"
+            - name: LIFERAY_USER
+              value: user
+            - name: DATABASE_USER
+              value: bn_liferay
+            - name: DATABASE_NAME
+              value: bitnami_liferay
+            - name: S3_BUCKET
+              value: liferay-test-jorge
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+          volumeMounts:
+            - name: liferay-secrets
+              mountPath: /etc/liferay-secrets
+              readOnly: true
+          livenessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 30
+            timeoutSeconds: 1
+      volumes:
+        - name: liferay-secrets
+          secret:
+            secretName: liferay-secrets
