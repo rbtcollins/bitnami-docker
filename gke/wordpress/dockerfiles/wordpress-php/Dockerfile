@@ -1,4 +1,4 @@
-FROM bitnami/php-fpm:5.5.30-0
+FROM bitnami/php-fpm:5.5.30-2
 ENV WORDPRESS_VERSION=4.3.1 \
     WORDPRESS_INSTALL_DIR=/app
 
