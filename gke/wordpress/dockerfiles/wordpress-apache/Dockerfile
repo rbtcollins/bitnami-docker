@@ -1,4 +1,4 @@
-FROM bitnami/apache:2.4.17-0
+FROM bitnami/apache:2.4.17-1-r02
 ENV WORDPRESS_VERSION=4.3.1 \
     WORDPRESS_INSTALL_DIR=/app
 
