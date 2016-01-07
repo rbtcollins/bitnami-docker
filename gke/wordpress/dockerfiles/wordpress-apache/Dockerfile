@@ -1,5 +1,5 @@
 FROM bitnami/apache:2.4.17-1-r02
-ENV WORDPRESS_VERSION=4.3.1 \
+ENV WORDPRESS_VERSION=4.3.2 \
     WORDPRESS_INSTALL_DIR=/app
 
 RUN curl -sSL https://wordpress.org/wordpress-${WORDPRESS_VERSION}.tar.gz -o /tmp/wordpress-${WORDPRESS_VERSION}.tar.gz \

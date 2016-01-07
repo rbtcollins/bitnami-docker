@@ -1,5 +1,5 @@
 FROM bitnami/php-fpm:5.5.30-2
-ENV WORDPRESS_VERSION=4.3.1 \
+ENV WORDPRESS_VERSION=4.3.2 \
     WORDPRESS_INSTALL_DIR=/app
 
 RUN apt-get update \
