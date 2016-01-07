@@ -41,7 +41,7 @@ spec:
             - containerPort: 3306
               name: mariadb-slave
           livenessProbe:
-            TCPSocket:
+            tcpSocket:
               port: 3306
             initialDelaySeconds: 30
             timeoutSeconds: 1
