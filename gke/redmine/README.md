@@ -88,10 +88,10 @@ A successful create response looks like:
 
 ```
 Creating cluster redmine...done.
-Created [.../projects/bitnami-tutorials/zones/us-central1-b/clusters/redmine].
+Created [.../projects/docker-opensource/zones/us-central1-b/clusters/redmine].
 kubeconfig entry generated for redmine.
-NAME     ZONE           MASTER_VERSION  MASTER_IP       MACHINE_TYPE   STATUS
-redmine  us-central1-b  1.0.1           104.154.91.251  n1-standard-1  RUNNING
+NAME     ZONE           MASTER_VERSION  MASTER_IP       MACHINE_TYPE   NUM_NODES  STATUS
+redmine  us-central1-b  1.1.3           104.197.201.95  n1-standard-1  3          RUNNING
 ```
 
 Now that your cluster is up and running, everything is set to launch the Redmine app.
@@ -134,7 +134,7 @@ Check to see if the pod is running. It may take a minute to change from `Pending
 ```bash
 $ kubectl get pods -l name=mariadb-master
 NAME                   READY     STATUS    RESTARTS   AGE
-mariadb-master-jqpiu   1/1       Running   0          1m
+mariadb-master-4uvvn   1/1       Running   0          35s
 ```
 
 A [service](http://kubernetes.io/v1.0/docs/user-guide/services.html) is an abstraction which defines a logical set of pods and a policy by which to access them. It is effectively a named load balancer that proxies traffic to one or more pods.
@@ -155,8 +155,8 @@ See it running:
 
 ```bash
 $ kubectl get services mariadb-master
-NAME             LABELS                SELECTOR              IP(S)           PORT(S)
-mariadb-master   name=mariadb-master   name=mariadb-master   10.99.248.210   3306/TCP
+NAME             CLUSTER_IP      EXTERNAL_IP   PORT(S)    SELECTOR              AGE
+mariadb-master   10.99.253.157   <none>        3306/TCP   name=mariadb-master   3
 ```
 
 ### MariaDB slave pod and service
@@ -178,9 +178,9 @@ Check to see if the pod is running. It may take a minute to change from `Pending
 ```bash
 $ kubectl get pods -l name=mariadb-slave
 NAME                  READY     STATUS    RESTARTS   AGE
-mariadb-slave-py0xg   1/1       Running   0          20s
-mariadb-slave-ttd93   1/1       Running   0          20s
-mariadb-slave-yd497   1/1       Running   0          20s
+mariadb-slave-3fm13   1/1       Running   0          34s
+mariadb-slave-gvpk1   1/1       Running   0          34s
+mariadb-slave-myfpr   1/1       Running   0          34s
 ```
 
 As with the MariaDB master pod, we want a service to group the slave pods. We'll use the file `mariadb-slave-service.yml` to create a service.
@@ -195,8 +195,8 @@ See it running:
 
 ```bash
 $ kubectl get services mariadb-slave
-NAME            LABELS               SELECTOR             IP(S)          PORT(S)
-mariadb-slave   name=mariadb-slave   name=mariadb-slave   10.99.249.58   3306/TCP
+NAME            CLUSTER_IP      EXTERNAL_IP   PORT(S)    SELECTOR             AGE
+mariadb-slave   10.99.251.234   <none>        3306/TCP   name=mariadb-slave   6s
 ```
 
 ## Redmine
@@ -291,8 +291,8 @@ See it running:
 
 ```bash
 $ kubectl get secrets -l name=redmine-secrets
-NAME              TYPE      DATA
-redmine-secrets   Opaque    4
+NAME              TYPE      DATA      AGE
+redmine-secrets   Opaque    4         9s
 ```
 
 This secret key store will be mounted at `/etc/redmine-secrets` in read-only mode in the Redmine pods.
@@ -314,9 +314,9 @@ Check to see if the pods are running. It may take a few minutes to change from `
 ```bash
 $ kubectl get pods -l name=redmine
 NAME            READY     STATUS    RESTARTS   AGE
-redmine-6tcyb   1/1       Running   0          29s
-redmine-ea1ug   1/1       Running   0          29s
-redmine-mydg5   1/1       Running   0          29s
+redmine-jyt2y   1/1       Running   2          49s
+redmine-xychk   1/1       Running   2          49s
+redmine-zt1sh   1/1       Running   0          49s
 ```
 
 Once the servers are up, you can list the pods in the cluster, to verify that they're all running:
@@ -324,13 +324,13 @@ Once the servers are up, you can list the pods in the cluster, to verify that th
 ```bash
 $ kubectl get pods
 NAME                   READY     STATUS    RESTARTS   AGE
-mariadb-master-jqpiu   1/1       Running   0          18m
-mariadb-slave-py0xg    1/1       Running   0          5m
-mariadb-slave-ttd93    1/1       Running   0          5m
-mariadb-slave-yd497    1/1       Running   0          5m
-redmine-6tcyb          0/1       Running   1          48s
-redmine-ea1ug          1/1       Running   0          48s
-redmine-mydg5          0/1       Running   1          48s
+mariadb-master-4uvvn   1/1       Running   0          2m
+mariadb-slave-3fm13    1/1       Running   0          1m
+mariadb-slave-gvpk1    1/1       Running   0          1m
+mariadb-slave-myfpr    1/1       Running   0          1m
+redmine-jyt2y          1/1       Running   2          1m
+redmine-xychk          1/1       Running   2          1m
+redmine-zt1sh          1/1       Running   0          1m
 ```
 
 You'll see a single MariaDB master pod, three MariaDB slave pods and three Redmine pods. In [Scaling the Redmine application](#scaling-the-redmine-application) we will see how we can scale the MariaDB slave pods and the Redmine pods.
@@ -348,8 +348,8 @@ See it running:
 
 ```bash
 $ kubectl get services redmine
-NAME      LABELS         SELECTOR       IP(S)          PORT(S)
-redmine   name=redmine   name=redmine   10.99.240.26   80/TCP
+NAME      CLUSTER_IP      EXTERNAL_IP   PORT(S)   SELECTOR       AGE
+redmine   10.99.248.175                 80/TCP    name=redmine   11s
 ```
 
 ## Allow external traffic
@@ -360,25 +360,25 @@ First we need to get the node prefix for the cluster using `kubectl get nodes`:
 
 ```bash
 $ kubectl get nodes
-NAME                             LABELS                                                  STATUS
-gke-redmine-1e9664b4-node-75tj   kubernetes.io/hostname=gke-redmine-1e9664b4-node-75tj   Ready
-gke-redmine-1e9664b4-node-pvxt   kubernetes.io/hostname=gke-redmine-1e9664b4-node-pvxt   Ready
-gke-redmine-1e9664b4-node-z0l0   kubernetes.io/hostname=gke-redmine-1e9664b4-node-z0l0   Ready
+NAME                             LABELS                                                  STATUS    AGE
+gke-redmine-a42d5fda-node-e58w   kubernetes.io/hostname=gke-redmine-a42d5fda-node-e58w   Ready     5h
+gke-redmine-a42d5fda-node-udcs   kubernetes.io/hostname=gke-redmine-a42d5fda-node-udcs   Ready     5h
+gke-redmine-a42d5fda-node-zti8   kubernetes.io/hostname=gke-redmine-a42d5fda-node-zti8   Ready     5h
 ```
 
 The value of `--target-tag` in the command below is the node prefix for the cluster up to `-node`.
 
 ```bash
 $ gcloud compute firewall-rules create --allow=tcp:80 \
-    --target-tags=gke-redmine-1e9664b4-node redmine
+    --target-tags=gke-redmine-a42d5fda-node redmine-http
 ```
 
 A successful response looks like:
 
 ```bash
-Created [.../projects/bitnami-tutorials/global/firewalls/redmine].
-NAME    NETWORK SRC_RANGES RULES  SRC_TAGS TARGET_TAGS
-redmine default 0.0.0.0/0  tcp:80          gke-redmine-1e9664b4-node
+Created [.../projects/docker-opensource/global/firewalls/redmine-http].
+NAME         NETWORK SRC_RANGES RULES  SRC_TAGS TARGET_TAGS
+redmine-http default 0.0.0.0/0  tcp:80          gke-redmine-a42d5fda-node
 ```
 
 Alternatively, you can open up port 80 from the [Developers Console](https://console.developers.google.com/).
@@ -389,18 +389,22 @@ Now that the firewall is open, you can access the service. Find the external IP 
 
 ```bash
 $ kubectl describe services redmine
-Name:                   redmine
-Namespace:              default
-Labels:                 name=redmine
-Selector:               name=redmine
-Type:                   LoadBalancer
-IP:                     10.99.240.26
-LoadBalancer Ingress:   104.197.88.105
-Port:                   <unnamed> 80/TCP
-NodePort:               <unnamed> 30534/TCP
-Endpoints:              10.96.0.6:3000,10.96.0.7:3000,10.96.2.6:3000
-Session Affinity:       None
-No events.
+Name:     redmine
+Namespace:    default
+Labels:     name=redmine
+Selector:   name=redmine
+Type:     LoadBalancer
+IP:     10.99.248.175
+LoadBalancer Ingress: 104.197.115.166
+Port:       <unnamed> 80/TCP
+NodePort:   <unnamed> 30535/TCP
+Endpoints:    10.96.1.10:3000
+Session Affinity: None
+Events:
+  FirstSeen LastSeen  Count From      SubobjectPath Reason      Message
+  ───────── ────────  ───── ────      ───────────── ──────      ───────
+  2m    2m    1 {service-controller }     CreatingLoadBalancer  Creating load balancer
+  1m    1m    1 {service-controller }     CreatedLoadBalancer Created load balancer
 ```
 
 Then, visit `http://x.x.x.x` where `x.x.x.x` is the IP address listed next to `LoadBalancer Ingress` in the response.
@@ -420,11 +424,11 @@ The configuration for the controllers will be updated, to specify that there sho
 ```bash
 $ kubectl get pods -l name=mariadb-slave
 NAME                  READY     STATUS    RESTARTS   AGE
-mariadb-slave-9k5m8   1/1       Running   0          35s
-mariadb-slave-py0xg   1/1       Running   0          18m
-mariadb-slave-rc8lv   1/1       Running   0          35s
-mariadb-slave-ttd93   1/1       Running   0          18m
-mariadb-slave-yd497   1/1       Running   0          18m
+mariadb-slave-3fm13   1/1       Running   0          19m
+mariadb-slave-fmxx6   1/1       Running   0          8s
+mariadb-slave-gvpk1   1/1       Running   0          19m
+mariadb-slave-myfpr   1/1       Running   0          19m
+mariadb-slave-rzopg   1/1       Running   0          8s
 ```
 
 Similarly to scale the Redmine pods:
@@ -438,11 +442,11 @@ $ kubectl scale --replicas=5 rc redmine
 ```bash
 $ kubectl get pods -l name=redmine
 NAME            READY     STATUS    RESTARTS   AGE
-redmine-6tcyb   1/1       Running   2          15m
-redmine-ea1ug   1/1       Running   1          15m
-redmine-gixpr   1/1       Running   0          1m
-redmine-mydg5   1/1       Running   2          15m
-redmine-uyxw0   1/1       Running   0          1m
+redmine-gdrs3   1/1       Running   0          3s
+redmine-jyt2y   1/1       Running   2          19m
+redmine-m6mk2   1/1       Running   0          3s
+redmine-xychk   1/1       Running   2          19m
+redmine-zt1sh   1/1       Running   0          19m
 ```
 
 You can scale down in the same manner.
