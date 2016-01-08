@@ -109,10 +109,11 @@ A successful create response looks like:
 
 ```
 Creating cluster wordpress...done.
-Created [.../projects/bitnami-tutorials/zones/us-central1-b/clusters/wordpress].
+Created [.../projects/docker-opensource/zones/us-central1-b/clusters/wordpress].
 kubeconfig entry generated for wordpress.
-NAME       ZONE           MASTER_VERSION  MASTER_IP      MACHINE_TYPE   STATUS
-wordpress  us-central1-b  1.0.6           104.154.78.26  n1-standard-1  RUNNING
+NAME       ZONE           MASTER_VERSION  MASTER_IP       MACHINE_TYPE   NUM_NODES  STATUS
+wordpress  us-central1-b  1.1.3           104.154.43.166  n1-standard-1  3          RUNNING
+
 ```
 
 Now that your cluster is up and running, we are set to launch the components that make up our deployment.
@@ -131,7 +132,7 @@ Create the persistent disk using:
 
 ```bash
 $ gcloud compute disks create --size 200GB mariadb-disk
-Created [.../projects/bitnami-tutorials/zones/us-central1-b/disks/mariadb-disk].
+Created [.../projects/docker-opensource/zones/us-central1-b/disks/mariadb-disk].
 NAME         ZONE          SIZE_GB TYPE        STATUS
 mariadb-disk us-central1-b 200     pd-standard READY
 ```
@@ -157,7 +158,7 @@ Check to see if the pod is running. It may take a minute to change from `Pending
 ```bash
 $ kubectl get pods -l name=mariadb-master
 NAME                   READY     STATUS    RESTARTS   AGE
-mariadb-master-ja9qy   1/1       Running   0          19s
+mariadb-master-ze6xc   1/1       Running   0          39s
 ```
 
 A [service](http://kubernetes.io/v1.0/docs/user-guide/services.html) is an abstraction which defines a logical set of pods and a policy by which to access them. It is effectively a named load balancer that proxies traffic to one or more pods.
@@ -176,8 +177,8 @@ See it running:
 
 ```bash
 $ kubectl get services mariadb-master
-NAME             LABELS                SELECTOR              IP(S)           PORT(S)
-mariadb-master   name=mariadb-master   name=mariadb-master   10.247.254.63   3306/TCP
+NAME             CLUSTER_IP       EXTERNAL_IP   PORT(S)    SELECTOR              AGE
+mariadb-master   10.247.244.249   <none>        3306/TCP   name=mariadb-master   4s
 ```
 
 ### MariaDB slave pod and service
@@ -197,9 +198,9 @@ Check to see if the pod is running. It may take a minute to change from `Pending
 ```bash
 $ kubectl get pods -l name=mariadb-slave
 NAME                  READY     STATUS    RESTARTS   AGE
-mariadb-slave-55960   1/1       Running   0          14s
-mariadb-slave-h8nk7   1/1       Running   0          14s
-mariadb-slave-kt7ne   1/1       Running   0          14s
+mariadb-slave-85jrd   1/1       Running   0          16s
+mariadb-slave-hfcrb   1/1       Running   0          16s
+mariadb-slave-rj1bo   1/1       Running   0          16s
 ```
 
 As with the MariaDB master pod, we want a service to group the slave pods. We'll use the file `mariadb-slave-service.yml` to create a service which specifies the label `name=mariadb-slave` as the pod `selector`.
@@ -214,8 +215,8 @@ See it running:
 
 ```bash
 $ kubectl get services mariadb-slave
-NAME            LABELS               SELECTOR             IP(S)            PORT(S)
-mariadb-slave   name=mariadb-slave   name=mariadb-slave   10.247.245.216   3306/TCP
+NAME            CLUSTER_IP      EXTERNAL_IP   PORT(S)    SELECTOR             AGE
+mariadb-slave   10.247.247.10   <none>        3306/TCP   name=mariadb-slave   6s
 ```
 
 ## Wordpress
@@ -294,8 +295,8 @@ See it running:
 
 ```bash
 $ kubectl get secrets -l name=wordpress-secrets
-NAME                TYPE      DATA
-wordpress-secrets   Opaque    11
+NAME                TYPE      DATA      AGE
+wordpress-secrets   Opaque    11        3s
 ```
 
 This secret key store will be mounted at `/etc/secrets` in read-only mode in the Wordpress pods.
@@ -319,9 +320,9 @@ Check to see if the pods are running. It may take a few minutes to change from `
 ```bash
 $ kubectl get pods -l name=wordpress-php
 NAME                  READY     STATUS    RESTARTS   AGE
-wordpress-php-30vi9   1/1       Running   0          15s
-wordpress-php-7nlh4   1/1       Running   0          15s
-wordpress-php-yg96d   1/1       Running   0          15s
+wordpress-php-iwubl   1/1       Running   0          18s
+wordpress-php-prrcf   1/1       Running   0          18s
+wordpress-php-xoghd   1/1       Running   0          18s
 ```
 
 We want a service to group the Wordpress pods. The service specification for the Wordpress service is defined in `wordpress-service.yml` and specifies the label `name=wordpress-php` as the pod `selector`.
@@ -336,8 +337,8 @@ See it running:
 
 ```bash
 $ kubectl get services wordpress-php
-NAME            LABELS               SELECTOR             IP(S)           PORT(S)
-wordpress-php   name=wordpress-php   name=wordpress-php   10.247.250.17   9000/TCP
+NAME            CLUSTER_IP       EXTERNAL_IP   PORT(S)    SELECTOR             AGE
+wordpress-php   10.247.254.201   <none>        9000/TCP   name=wordpress-php   3s
 ```
 
 ## Apache
@@ -365,9 +366,9 @@ Check to see if the pods are running:
 ```bash
 $ kubectl get pods -l name=wordpress-apache
 NAME                     READY     STATUS    RESTARTS   AGE
-wordpress-apache-coou5   1/1       Running   0          16s
-wordpress-apache-hzqcq   1/1       Running   0          16s
-wordpress-apache-q3v3l   1/1       Running   0          16s
+wordpress-apache-qiw1h   1/1       Running   0          22s
+wordpress-apache-so2oj   1/1       Running   0          22s
+wordpress-apache-uq52m   1/1       Running   0          22s
 ```
 
 Once the servers are up, you can list the pods in the cluster, to verify that they're all running:
@@ -375,16 +376,16 @@ Once the servers are up, you can list the pods in the cluster, to verify that th
 ```bash
 $ kubectl get pods
 NAME                     READY     STATUS    RESTARTS   AGE
-mariadb-master-ja9qy     1/1       Running   0          3m
-mariadb-slave-55960      1/1       Running   0          2m
-mariadb-slave-h8nk7      1/1       Running   0          2m
-mariadb-slave-kt7ne      1/1       Running   0          2m
-wordpress-apache-coou5   1/1       Running   0          37s
-wordpress-apache-hzqcq   1/1       Running   0          37s
-wordpress-apache-q3v3l   1/1       Running   0          37s
-wordpress-php-30vi9      1/1       Running   0          1m
-wordpress-php-7nlh4      1/1       Running   0          1m
-wordpress-php-yg96d      1/1       Running   0          1m
+mariadb-master-ze6xc     1/1       Running   0          4m
+mariadb-slave-85jrd      1/1       Running   0          2m
+mariadb-slave-hfcrb      1/1       Running   0          2m
+mariadb-slave-rj1bo      1/1       Running   0          2m
+wordpress-apache-qiw1h   1/1       Running   0          36s
+wordpress-apache-so2oj   1/1       Running   0          36s
+wordpress-apache-uq52m   1/1       Running   0          36s
+wordpress-php-iwubl      1/1       Running   0          1m
+wordpress-php-prrcf      1/1       Running   0          1m
+wordpress-php-xoghd      1/1       Running   0          1m
 ```
 
 You'll see a single MariaDB master pod, three MariaDB slave pods, three Wordpress pods and three Apache pods. In [Scaling the Wordpress blog](#scaling-the-wordpress-blog) we'll see how we can scale the MariaDB slave, Wordpress and Apache pods to meet the growing demands of your blog.
@@ -401,8 +402,8 @@ See it running:
 
 ```bash
 $ kubectl get services wordpress-apache
-NAME               LABELS                  SELECTOR                IP(S)           PORT(S)
-wordpress-apache   name=wordpress-apache   name=wordpress-apache   10.247.252.50   80/TCP
+NAME               CLUSTER_IP      EXTERNAL_IP   PORT(S)   SELECTOR                AGE
+wordpress-apache   10.247.244.54                 80/TCP    name=wordpress-apache   7s
 ```
 
 ## Allow external traffic
@@ -413,25 +414,25 @@ First we need to get the node prefix for the cluster using:
 
 ```bash
 $ kubectl get nodes
-NAME                               LABELS                                                    STATUS
-gke-wordpress-17345479-node-6v8x   kubernetes.io/hostname=gke-wordpress-17345479-node-6v8x   Ready
-gke-wordpress-17345479-node-8b0v   kubernetes.io/hostname=gke-wordpress-17345479-node-8b0v   Ready
-gke-wordpress-17345479-node-wef4   kubernetes.io/hostname=gke-wordpress-17345479-node-wef4   Ready
+NAME                               LABELS                                                    STATUS    AGE
+gke-wordpress-18fd6946-node-6i6t   kubernetes.io/hostname=gke-wordpress-18fd6946-node-6i6t   Ready     6m
+gke-wordpress-18fd6946-node-8r7a   kubernetes.io/hostname=gke-wordpress-18fd6946-node-8r7a   Ready     6m
+gke-wordpress-18fd6946-node-zxm5   kubernetes.io/hostname=gke-wordpress-18fd6946-node-zxm5   Ready     6m
 ```
 
 The value of `--target-tag` in the command below is the node prefix for the cluster up to `-node`.
 
 ```bash
 $ gcloud compute firewall-rules create --allow=tcp:80 \
-    --target-tags=gke-wordpress-17345479-node wordpress-http
+    --target-tags=gke-wordpress-18fd6946-node wordpress-http
 ```
 
 A successful response looks like:
 
 ```bash
-Created [.../projects/bitnami-tutorials/global/firewalls/wordpress-http].
+Created [.../projects/docker-opensource/global/firewalls/wordpress-http].
 NAME           NETWORK SRC_RANGES RULES  SRC_TAGS TARGET_TAGS
-wordpress-http default 0.0.0.0/0  tcp:80          gke-wordpress-17345479-node
+wordpress-http default 0.0.0.0/0  tcp:80          gke-wordpress-18fd6946-node
 ```
 
 Alternatively, you can open up port `80` from the [Developers Console](https://console.developers.google.com/).
@@ -442,18 +443,22 @@ Now that the firewall is open, you can access the service over the internet. Fin
 
 ```bash
 $ kubectl describe services wordpress-apache
-Name:                   wordpress-apache
-Namespace:              default
-Labels:                 name=wordpress-apache
-Selector:               name=wordpress-apache
-Type:                   LoadBalancer
-IP:                     10.247.252.50
-LoadBalancer Ingress:   104.197.94.0
-Port:                   <unnamed> 80/TCP
-NodePort:               <unnamed> 31191/TCP
-Endpoints:              10.244.0.8:80,10.244.1.4:80,10.244.2.7:80
-Session Affinity:       None
-No events.
+Name:                 wordpress-apache
+Namespace:            default
+Labels:               name=wordpress-apache
+Selector:             name=wordpress-apache
+Type:                 LoadBalancer
+IP:                   10.247.244.54
+LoadBalancer Ingress: 104.197.91.177
+Port:                 <unnamed> 80/TCP
+NodePort:             <unnamed> 31959/TCP
+Endpoints:            10.244.0.7:80,10.244.1.7:80,10.244.2.6:80
+Session Affinity:     None
+Events:
+  FirstSeen LastSeen  Count From      SubobjectPath Reason      Message
+  ───────── ────────  ───── ────      ───────────── ──────      ───────
+  1m    1m    1 {service-controller }     CreatingLoadBalancer  Creating load balancer
+  22s   22s   1 {service-controller }     CreatedLoadBalancer Created load balancer
 ```
 
 Visit `http://x.x.x.x` in your favourite web browser, where `x.x.x.x` is the IP address listed next to `LoadBalancer Ingress` in the response of the above command. You will be greeted with the Wordpress setup:.
@@ -485,11 +490,11 @@ The configuration for the controllers will be updated, to specify that there sho
 ```bash
 $ kubectl get pods -l name=mariadb-slave
 NAME                  READY     STATUS    RESTARTS   AGE
-mariadb-slave-55960   1/1       Running   0          7m
-mariadb-slave-h8nk7   1/1       Running   0          7m
-mariadb-slave-kt7ne   1/1       Running   0          7m
-mariadb-slave-rdlsh   1/1       Running   0          10s
-mariadb-slave-t9b4p   1/1       Running   0          10s
+mariadb-slave-85jrd   1/1       Running   0          8m
+mariadb-slave-hfcrb   1/1       Running   0          8m
+mariadb-slave-kemgr   1/1       Running   0          12s
+mariadb-slave-kzr6y   1/1       Running   0          12s
+mariadb-slave-rj1bo   1/1       Running   0          8m
 ```
 
 Similarly to scale the Wordpress pods:
@@ -513,10 +518,7 @@ You can scale down in the same manner.
 Because we used a persistent disk for the MariaDB master pod and used Google cloud storage for files uploaded to the Wordpress media library, the state of your Wordpress deployment is preserved even when the pods it's running on are deleted. Lets try it.
 
 ```bash
-$ kubectl delete rc wordpress-apache
-$ kubectl delete rc wordpress-php
-$ kubectl delete rc mariadb-slave
-$ kubectl delete rc mariadb-master
+$ kubectl delete rc wordpress-apache wordpress-php mariadb-slave mariadb-master
 ```
 
 *Deleting the replication controller also deletes its pods.*
@@ -547,19 +549,13 @@ To delete your application completely:
   1. Delete the controllers:
 
   ```bash
-  $ kubectl delete rc wordpress-apache
-  $ kubectl delete rc wordpress-php
-  $ kubectl delete rc mariadb-slave
-  $ kubectl delete rc mariadb-master
+  $ kubectl delete rc wordpress-apache wordpress-php mariadb-slave mariadb-master
   ```
 
   2. Delete the services:
 
   ```bash
-  $ kubectl delete service wordpress-apache
-  $ kubectl delete service wordpress-php
-  $ kubectl delete service mariadb-slave
-  $ kubectl delete service mariadb-master
+  $ kubectl delete service wordpress-apache wordpress-php mariadb-slave mariadb-master
   ```
 
   3. Delete the secret key store
