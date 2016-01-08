@@ -111,8 +111,8 @@ A successful create response looks like:
 Creating cluster myapp...done.
 Created [.../projects/bitnami-tutorials/zones/us-central1-b/clusters/myapp].
 kubeconfig entry generated for myapp.
-NAME   ZONE           MASTER_VERSION  MASTER_IP     MACHINE_TYPE   STATUS
-myapp  us-central1-b  1.0.6           104.154.70.1  n1-standard-1  RUNNING
+NAME   ZONE           MASTER_VERSION  MASTER_IP       MACHINE_TYPE   NUM_NODES  STATUS
+myapp  us-central1-b  1.1.3           104.197.61.185  n1-standard-1  3          RUNNING
 ```
 
 Now that your cluster is up and running, we are set to launch the components that make up our deployment.
@@ -157,7 +157,7 @@ Check to see if the pod is running. It may take a minute to change from `Pending
 ```bash
 $ kubectl get pods -l name=mariadb
 NAME            READY     STATUS    RESTARTS   AGE
-mariadb-hy5cc   1/1       Running   0          22s
+mariadb-qavut   1/1       Running   0          39s
 ```
 
 A [service](http://kubernetes.io/v1.0/docs/user-guide/services.html) is an abstraction which defines a logical set of pods and a policy by which to access them. It is effectively a named load balancer that proxies traffic to one or more pods.
@@ -176,8 +176,8 @@ See it running:
 
 ```bash
 $ kubectl get services mariadb
-NAME      LABELS         SELECTOR       IP(S)            PORT(S)
-mariadb   name=mariadb   name=mariadb   10.115.241.186   3306/TCP
+NAME      CLUSTER_IP       EXTERNAL_IP   PORT(S)    SELECTOR       AGE
+mariadb   10.115.254.227   <none>        3306/TCP   name=mariadb   3s
 ```
 
 ## MyApp
@@ -211,8 +211,8 @@ See it running:
 
 ```bash
 $ kubectl get secrets -l name=myapp-secrets
-NAME            TYPE      DATA
-myapp-secrets   Opaque    1
+NAME            TYPE      DATA      AGE
+myapp-secrets   Opaque    1         10s
 ```
 
 This secret key store will be mounted at `/etc/secrets` in read-only mode in the MyApp pods.
@@ -236,9 +236,9 @@ Check to see if the pods are running. It may take a few minutes to change from `
 ```bash
 $ kubectl get pods -l name=myapp-php
 NAME              READY     STATUS    RESTARTS   AGE
-myapp-php-05mvy   1/1       Running   0          12s
-myapp-php-0ftsv   1/1       Running   0          12s
-myapp-php-3tax6   1/1       Running   0          12s
+myapp-php-7yovx   1/1       Running   0          21s
+myapp-php-nlbkd   1/1       Running   0          21s
+myapp-php-wgm9b   1/1       Running   0          21s
 ```
 
 We want a service to group the MyApp pods. The service specification for the MyApp service is defined in `myapp-service.yml` and specifies the label `name=myapp-php` as the pod `selector`.
@@ -253,8 +253,8 @@ See it running:
 
 ```bash
 $ kubectl get services myapp-php
-NAME        LABELS           SELECTOR         IP(S)           PORT(S)
-myapp-php   name=myapp-php   name=myapp-php   10.115.243.56   9000/TCP
+NAME        CLUSTER_IP       EXTERNAL_IP   PORT(S)    SELECTOR         AGE
+myapp-php   10.115.244.233   <none>        9000/TCP   name=myapp-php   10s
 ```
 
 ## Apache
@@ -284,9 +284,9 @@ Check to see if the pods are running:
 ```bash
 $ kubectl get pods -l name=myapp-apache
 NAME                 READY     STATUS    RESTARTS   AGE
-myapp-apache-0dath   1/1       Running   0          11s
-myapp-apache-bu7dt   1/1       Running   0          11s
-myapp-apache-eb6mo   1/1       Running   0          11s
+myapp-apache-2db9w   1/1       Running   0          12s
+myapp-apache-8etzg   1/1       Running   0          12s
+myapp-apache-xhgwv   1/1       Running   0          12s
 ```
 
 Once the servers are up, you can list the pods in the cluster, to verify that they're all running:
@@ -294,13 +294,13 @@ Once the servers are up, you can list the pods in the cluster, to verify that th
 ```bash
 $ kubectl get pods
 NAME                 READY     STATUS    RESTARTS   AGE
-mariadb-hy5cc        1/1       Running   0          3m
-myapp-apache-0dath   1/1       Running   0          1m
-myapp-apache-bu7dt   1/1       Running   0          1m
-myapp-apache-eb6mo   1/1       Running   0          1m
-myapp-php-05mvy      1/1       Running   0          2m
-myapp-php-0ftsv      1/1       Running   0          2m
-myapp-php-3tax6      1/1       Running   0          2m
+mariadb-qavut        1/1       Running   0          3m
+myapp-apache-2db9w   1/1       Running   0          31s
+myapp-apache-8etzg   1/1       Running   0          31s
+myapp-apache-xhgwv   1/1       Running   0          31s
+myapp-php-7yovx      1/1       Running   0          1m
+myapp-php-nlbkd      1/1       Running   0          1m
+myapp-php-wgm9b      1/1       Running   0          1m
 ```
 
 You'll see a single MariaDB pod, three MyApp pods and three Apache pods. In [Scaling MyApp](#scaling-myapp) we'll see how we can scale the MyApp and Apache pods on demand.
@@ -317,8 +317,8 @@ See it running:
 
 ```bash
 $ kubectl get services myapp-apache
-NAME           LABELS              SELECTOR            IP(S)           PORT(S)
-myapp-apache   name=myapp-apache   name=myapp-apache   10.115.240.76   80/TCP
+NAME           CLUSTER_IP      EXTERNAL_IP   PORT(S)   SELECTOR            AGE
+myapp-apache   10.115.245.91                 80/TCP    name=myapp-apache   4s
 ```
 
 ## Allow external traffic
@@ -329,17 +329,17 @@ First we need to get the node prefix for the cluster using:
 
 ```bash
 $ kubectl get nodes
-NAME                           LABELS                                                STATUS
-gke-myapp-20af8802-node-6jgn   kubernetes.io/hostname=gke-myapp-20af8802-node-6jgn   Ready
-gke-myapp-20af8802-node-e52t   kubernetes.io/hostname=gke-myapp-20af8802-node-e52t   Ready
-gke-myapp-20af8802-node-rs35   kubernetes.io/hostname=gke-myapp-20af8802-node-rs35   Ready
+NAME                           LABELS                                                STATUS    AGE
+gke-myapp-21b6159e-node-amen   kubernetes.io/hostname=gke-myapp-21b6159e-node-amen   Ready     16m
+gke-myapp-21b6159e-node-v54r   kubernetes.io/hostname=gke-myapp-21b6159e-node-v54r   Ready     16m
+gke-myapp-21b6159e-node-z5im   kubernetes.io/hostname=gke-myapp-21b6159e-node-z5im   Ready     16m
 ```
 
 The value of `--target-tag` in the command below is the node prefix for the cluster up to `-node`.
 
 ```bash
 $ gcloud compute firewall-rules create --allow=tcp:80 \
-    --target-tags=gke-myapp-20af8802-node myapp-http
+    --target-tags=gke-myapp-21b6159e-node myapp-http
 ```
 
 A successful response looks like:
@@ -347,7 +347,7 @@ A successful response looks like:
 ```bash
 Created [.../projects/bitnami-tutorials/global/firewalls/myapp-http].
 NAME       NETWORK SRC_RANGES RULES  SRC_TAGS TARGET_TAGS
-myapp-http default 0.0.0.0/0  tcp:80          gke-myapp-20af8802-node
+myapp-http default 0.0.0.0/0  tcp:80          gke-myapp-21b6159e-node
 ```
 
 Alternatively, you can open up port `80` from the [Developers Console](https://console.developers.google.com/).
@@ -363,13 +363,17 @@ Namespace:              default
 Labels:                 name=myapp-apache
 Selector:               name=myapp-apache
 Type:                   LoadBalancer
-IP:                     10.115.240.76
-LoadBalancer Ingress:   104.197.145.8
-Port:                   <unnamed> 80/TCP
-NodePort:               <unnamed> 30638/TCP
-Endpoints:              10.112.0.6:80,10.112.0.7:80,10.112.1.6:80
+IP:                     10.115.245.91
+LoadBalancer Ingress:   162.222.178.123
+Port:                   <unnamed>   80/TCP
+NodePort:               <unnamed>   30384/TCP
+Endpoints:              10.112.0.6:80,10.112.1.6:80,10.112.2.5:80
 Session Affinity:       None
-No events.
+Events:
+  FirstSeen LastSeen    Count   From            SubobjectPath   Reason          Message
+  ───────── ────────    ─────   ────            ─────────────   ──────          ───────
+  1m        1m      1   {service-controller }           CreatingLoadBalancer    Creating load balancer
+  47s       47s     1   {service-controller }           CreatedLoadBalancer Created load balancer
 ```
 
 Visit `http://x.x.x.x` in your favourite web browser, where `x.x.x.x` is the IP address listed next to `LoadBalancer Ingress` in the response of the above command.
@@ -391,11 +395,11 @@ The configuration for the controllers will be updated, to specify that there sho
 ```bash
 $ kubectl get pods -l name=myapp-php
 NAME              READY     STATUS    RESTARTS   AGE
-myapp-php-0bumv   1/1       Running   0          1m
-myapp-php-cdp58   1/1       Running   0          1m
-myapp-php-es3wz   1/1       Running   0          1m
-myapp-php-rdlsh   1/1       Running   0          10s
-myapp-php-t9b4p   1/1       Running   0          10s
+myapp-php-7btx7   1/1       Running   0          14s
+myapp-php-7yovx   1/1       Running   0          4m
+myapp-php-98ese   1/1       Running   0          14s
+myapp-php-nlbkd   1/1       Running   0          4m
+myapp-php-wgm9b   1/1       Running   0          4m
 ```
 
 Similarly to scale the Apache pods:
@@ -413,9 +417,7 @@ You can scale down in the same manner.
 Because we used a persistent disk for the MariaDB master pod, the state of your MyApp deployment is preserved even when the pods it's running on are deleted. Lets try it.
 
 ```bash
-$ kubectl delete rc myapp-apache
-$ kubectl delete rc myapp-php
-$ kubectl delete rc mariadb
+$ kubectl delete rc myapp-apache myapp-php mariadb
 ```
 
 *Deleting the replication controller also deletes its pods.*
@@ -445,17 +447,13 @@ To delete your application completely:
   1. Delete the controllers:
 
   ```bash
-  $ kubectl delete rc myapp-apache
-  $ kubectl delete rc myapp-php
-  $ kubectl delete rc mariadb
+  $ kubectl delete rc myapp-apache myapp-php mariadb
   ```
 
   2. Delete the services:
 
   ```bash
-  $ kubectl delete service myapp-apache
-  $ kubectl delete service myapp-php
-  $ kubectl delete service mariadb
+  $ kubectl delete service myapp-apache myapp-php mariadb
   ```
 
   3. Delete the secret key store
