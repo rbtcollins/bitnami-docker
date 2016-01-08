@@ -1,0 +1,20 @@
+#!/usr/bin/with-contenv bash
+set -e
+
+# create a catch-all vhost configuration for wordpress
+cat > $BITNAMI_APP_DIR/conf/vhosts/myapp-php.conf <<EOF
+<VirtualHost *:80>
+  ServerName localhost
+  ServerAlias *
+
+  DirectoryIndex index.html, index.php
+  DocumentRoot "$MYAPP_DIR"
+
+  ProxyPassMatch ^/(.*\.php(/.*)?)\$ fcgi://myapp-php:9000$MYAPP_DIR/\$1
+  <Directory "$MYAPP_DIR">
+    Options Indexes FollowSymLinks MultiViews
+    AllowOverride All
+    Require all granted
+  </Directory>
+</VirtualHost>
+EOF
