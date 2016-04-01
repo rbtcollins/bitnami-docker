@@ -142,7 +142,7 @@ ghost:
   links:
     - mariadb:mariadb
   volumes:
-    - ghost:/app
+    - ./ghost:/app
   command: "sh -c 'npm install --production && npm start --production'"
 
 nginx:
@@ -152,7 +152,7 @@ nginx:
   ports:
     - 80:80
   volumes:
-    - nginx-vhost:/bitnami/nginx/conf/vhosts
+    - ./nginx-vhost:/bitnami/nginx/conf/vhosts
 ```
 
 In this Docker Compose definition, we used the `volumes` property to mount the Ghost app and

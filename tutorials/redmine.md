@@ -112,14 +112,14 @@ mariadb:
     - MARIADB_PASSWORD=my-password
     - MARIADB_DATABASE=redminedb
   volumes:
-    - mariadb-data:/bitnami/mariadb/data
+    - ./mariadb-data:/bitnami/mariadb/data
 
 redmine:
   image: bitnami/ruby
   links:
     - mariadb:mariadb
   volumes:
-    - redmine:/app
+    - ./redmine:/app
   command: >
     sh -c 'bundle install --without development test \
         && bundle exec rake db:migrate RAILS_ENV=production \
@@ -133,7 +133,7 @@ nginx:
   ports:
     - 80:80
   volumes:
-    - nginx-vhost:/bitnami/nginx/conf/vhosts
+    - ./nginx-vhost:/bitnami/nginx/conf/vhosts
 ```
 
 The `docker-compose.yml` file will be used to orchestrate the launch of the MariaDB, Ruby and nginx containers using docker-compose.
