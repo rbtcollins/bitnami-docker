@@ -60,7 +60,7 @@ Create a file named `subrion.conf` in the `apache-vhost` directory with the foll
 <VirtualHost *:80>
   ServerName subrion.example.com
   DocumentRoot "/app"
-  ProxyPassMatch ^/(.*\.php(/.*)?)$ fcgi://php-fpm:9000/app/$1
+  ProxyPassMatch ^/(.*\.php(/.*)?)$ fcgi://subrion:9000/app/$1
   <Directory "/app">
     Options Indexes FollowSymLinks
     AllowOverride All
